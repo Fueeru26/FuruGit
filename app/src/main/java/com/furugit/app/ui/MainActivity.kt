@@ -81,6 +81,7 @@ class MainActivity : AppCompatActivity() {
         nav.menu.findItem(R.id.nav_sync).title = "Sync"
         nav.menu.findItem(R.id.nav_history).title = tx("Riwayat")
         nav.setOnItemSelectedListener { item ->
+            tabId = item.itemId
             supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
             val f: Fragment = when (item.itemId) {
                 R.id.nav_repo -> RepoFragment()
@@ -93,13 +94,15 @@ class MainActivity : AppCompatActivity() {
             updateHeader()
             true
         }
-        if (savedInstanceState == null) nav.selectedItemId = R.id.nav_repo
+        if (savedInstanceState == null) nav.selectedItemId = R.id.nav_repo else tabId = nav.selectedItemId
         updateHeader()
 
         if (savedInstanceState == null && !StorageAccess.hasAccess(this)) askStorage()
     }
 
-    private fun navTitle(): String = when (nav.selectedItemId) {
+    private var tabId = R.id.nav_repo
+
+    private fun navTitle(): String = when (tabId) {
         R.id.nav_repo -> "Repositori"
         R.id.nav_changes -> "Perubahan"
         R.id.nav_branches -> "Branch"
@@ -118,6 +121,11 @@ class MainActivity : AppCompatActivity() {
             toolbar.navigationIcon = null
             toolbar.menu.findItem(R.id.action_settings)?.isVisible = true
         }
+    }
+
+    /** Pindah ke tab lain lewat kode (mis. dari kartu repo aktif ke tab Perubahan). */
+    fun openTab(id: Int) {
+        nav.selectedItemId = id
     }
 
     private fun askStorage() {

@@ -22,7 +22,18 @@ First release.
   - **Check for Updates**: reads the releases of `Fueeru26/FuruGit`, shows the notes, downloads the APK and opens the system installer.
   - **About**: developer, contact, donation, problem report by email and "About the App".
 - **Design** matching FuruArc (Classic style: palette, 10 dp cards and buttons, bottom navigation, Qanelas font) and a new app icon.
+- **Crash screen**: an unhandled crash is saved and shown on screen (separate `:crash` process) so the error message can be copied and reported.
 - Repository files: README (English and Indonesian), LICENSE (GPL-3.0), SECURITY, CONTRIBUTING, CODE OF CONDUCT, THIRD_PARTY_NOTICES, docs (FAQ, Privacy), issue and pull request templates, GitHub Actions workflows (build, release).
 
 ### Fixed
 - Buttons whose label needs two lines (for example "Open folder", "Commit & Push", "Stash changes") no longer shift down or get clipped: every button is exactly 44 dp high, uses one line and shrinks long text, so buttons side by side line up exactly.
+- The toolbar title now changes immediately when switching between tabs (it used to show the previously selected tab).
+
+### Added (later in 1.00)
+- **Last message** button in the Changes tab: fills the commit message (and description) from the latest commit.
+- Tapping the **active repository** card in the Repo tab opens the Changes tab.
+
+### Changed
+- Spacing now follows FuruArc: 16 dp between cards, 16 dp card padding, 12 dp before buttons and fields, roomier line spacing, and section titles in the accent color.
+- App Settings now uses FuruArc-style dropdowns (Theme Mode, Language) and the scrolling named color circles; the extra description lines were removed.
+- About: contact links have icons, donation shows only the platform names as links followed by the support note (same layout as FuruArc).

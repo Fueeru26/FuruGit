@@ -72,14 +72,18 @@ fun vbox(ctx: Context, pad: Int = 0): LinearLayout = LinearLayout(ctx).apply {
     setPadding(ctx.dp(pad), ctx.dp(pad), ctx.dp(pad), ctx.dp(pad))
 }
 
+/** Jarak ke elemen sebelumnya (seperti spacedBy di FuruArc); elemen pertama tidak diberi jarak. */
+fun LinearLayout.gap(dp: Int): Int = if (childCount == 0) 0 else context.dp(dp)
+
+/** Judul bagian: 18sp tebal berwarna aksen (SectionTitle di FuruArc). */
 fun LinearLayout.title(text: String): TextView {
     val t = TextView(context)
     t.text = tx(text)
     t.textSize = 18f
     t.typeface = Fonts.bold(context)
-    t.setTextColor(context.color(R.color.furu_text))
-    t.setPadding(0, context.dp(20), 0, context.dp(4))
-    addView(t, LinearLayout.LayoutParams(MATCH, WRAP))
+    t.setTextColor(context.color(R.color.furu_accent))
+    t.setPadding(context.dp(4), context.dp(8), 0, 0)
+    addView(t, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = gap(16) })
     return t
 }
 
@@ -88,7 +92,8 @@ fun LinearLayout.label(
     size: Float = 14f,
     bold: Boolean = false,
     mono: Boolean = false,
-    dim: Boolean = false
+    dim: Boolean = false,
+    gap: Int = if (size >= 16f) 6 else 4
 ): TextView {
     val t = TextView(context)
     t.text = tx(text)
@@ -99,13 +104,15 @@ fun LinearLayout.label(
         else -> Fonts.regular(context)
     }
     t.setTextColor(context.color(if (dim) R.color.furu_muted else R.color.furu_text))
-    addView(t, LinearLayout.LayoutParams(MATCH, WRAP))
+    if (!mono && size < 18f) t.setLineSpacing(0f, 1.25f)
+    addView(t, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = this@label.gap(gap) })
     return t
 }
 
 fun LinearLayout.hint(text: String): TextView = label(text, 12f, dim = true)
 
 fun LinearLayout.space(h: Int = 8) {
+    if (childCount == 0) return
     addView(android.view.View(context), LinearLayout.LayoutParams(MATCH, context.dp(h)))
 }
 
@@ -114,7 +121,7 @@ fun LinearLayout.hrow(block: LinearLayout.() -> Unit): LinearLayout {
     r.orientation = LinearLayout.HORIZONTAL
     r.block()
     (r.getChildAt(r.childCount - 1)?.layoutParams as? LinearLayout.LayoutParams)?.marginEnd = 0
-    addView(r, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = context.dp(8) })
+    addView(r, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = gap(12) })
     return r
 }
 
@@ -149,7 +156,7 @@ fun LinearLayout.button(text: String, outlined: Boolean = false, onClick: () -> 
     val lp = if (orientation == LinearLayout.HORIZONTAL) {
         LinearLayout.LayoutParams(0, h, 1f).apply { marginEnd = context.dp(8) }
     } else {
-        LinearLayout.LayoutParams(MATCH, h).apply { topMargin = context.dp(8) }
+        LinearLayout.LayoutParams(MATCH, h).apply { topMargin = gap(12) }
     }
     addView(b, lp)
     return b
@@ -178,7 +185,7 @@ fun LinearLayout.input(
     }
     if (multiline) et.minLines = 2
     til.addView(et)
-    addView(til, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = context.dp(8) })
+    addView(til, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = gap(12) })
     return et
 }
 
@@ -196,7 +203,7 @@ fun LinearLayout.card(
     c.setStrokeColor(ColorStateList.valueOf(context.color(R.color.furu_card_border)))
     val inner = LinearLayout(context)
     inner.orientation = LinearLayout.VERTICAL
-    inner.setPadding(context.dp(16), context.dp(14), context.dp(16), context.dp(14))
+    inner.setPadding(context.dp(16), context.dp(16), context.dp(16), context.dp(16))
     inner.block()
     c.addView(inner, FrameLayout.LayoutParams(MATCH, WRAP))
     if (onClick != null) {
@@ -205,7 +212,7 @@ fun LinearLayout.card(
         c.pressScale()
     }
     if (onLong != null) c.setOnLongClickListener { onLong(); true }
-    addView(c, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = context.dp(10) })
+    addView(c, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = gap(16) })
     return inner
 }
 
@@ -236,7 +243,7 @@ fun LinearLayout.rowCard(
         c.orientation = LinearLayout.VERTICAL
         row.addView(c, LinearLayout.LayoutParams(0, WRAP, 1f).apply { marginStart = context.dp(14) })
         c.label(title, 16f, bold = true)
-        if (sub != null) c.label(sub, 12f, dim = true)
+        if (sub != null) c.label(sub, 12f, dim = true, gap = 2)
         addView(row, LinearLayout.LayoutParams(MATCH, WRAP))
         col = c
     }
@@ -307,4 +314,78 @@ object Dialogs {
         v.addView(h)
         MaterialAlertDialogBuilder(ctx).setTitle(tx(title)).setView(v).setPositiveButton(tx("Tutup"), null).show()
     }
+}
+
+
+/**
+ * Dropdown bergaya FuruArc (AppDropdown): kolom berbingkai 10dp, teks 16sp + "▾"; menu muncul tepat
+ * di bawahnya selebar kolom, maksimal 5 pilihan terlihat (lebih dari itu bisa digulir).
+ */
+fun LinearLayout.dropdown(options: List<String>, selected: Int, onPick: (Int) -> Unit): View {
+    val ctx = context
+    val box = MaterialCardView(ctx)
+    box.radius = ctx.dp(10).toFloat()
+    box.cardElevation = 0f
+    box.setCardBackgroundColor(ctx.color(R.color.furu_card))
+    box.strokeWidth = ctx.dp(1)
+    box.setStrokeColor(ColorStateList.valueOf(ctx.color(R.color.furu_outline)))
+    box.isClickable = true
+    val row = LinearLayout(ctx)
+    row.orientation = LinearLayout.HORIZONTAL
+    row.gravity = Gravity.CENTER_VERTICAL
+    row.minimumHeight = ctx.dp(52)
+    row.setPadding(ctx.dp(16), 0, ctx.dp(16), 0)
+    val tv = TextView(ctx)
+    tv.text = options.getOrElse(selected) { "-" }
+    tv.textSize = 16f
+    tv.typeface = Fonts.regular(ctx)
+    tv.setTextColor(ctx.color(R.color.furu_text))
+    tv.setSingleLine(true)
+    tv.ellipsize = TextUtils.TruncateAt.END
+    row.addView(tv, LinearLayout.LayoutParams(0, WRAP, 1f))
+    val arrow = TextView(ctx)
+    arrow.text = "▾"
+    arrow.textSize = 16f
+    arrow.setTextColor(ctx.color(R.color.furu_muted))
+    row.addView(arrow, LinearLayout.LayoutParams(WRAP, WRAP))
+    box.addView(row, FrameLayout.LayoutParams(MATCH, WRAP))
+    box.pressScale(0.98f)
+    box.setOnClickListener {
+        val list = LinearLayout(ctx)
+        list.orientation = LinearLayout.VERTICAL
+        list.setPadding(0, ctx.dp(4), 0, ctx.dp(4))
+        val pop = android.widget.PopupWindow(ctx)
+        options.forEachIndexed { i, text ->
+            val item = TextView(ctx)
+            item.text = text
+            item.textSize = 15f
+            item.typeface = Fonts.regular(ctx)
+            item.gravity = Gravity.CENTER_VERTICAL
+            item.setSingleLine(true)
+            item.ellipsize = TextUtils.TruncateAt.END
+            item.setPadding(ctx.dp(16), 0, ctx.dp(16), 0)
+            item.setTextColor(ctx.color(if (i == selected) R.color.furu_accent else R.color.furu_text))
+            item.setOnClickListener {
+                pop.dismiss()
+                if (i != selected) onPick(i)
+            }
+            list.addView(item, LinearLayout.LayoutParams(MATCH, ctx.dp(48)))
+        }
+        val sv = android.widget.ScrollView(ctx)
+        sv.addView(list)
+        val bg = GradientDrawable()
+        bg.cornerRadius = ctx.dp(10).toFloat()
+        bg.setColor(ctx.color(R.color.furu_card))
+        bg.setStroke(ctx.dp(1), ctx.color(R.color.furu_outline))
+        pop.contentView = sv
+        pop.width = box.width
+        pop.height = minOf(ctx.dp(48 * 5 + 8), ctx.dp(48 * options.size + 8))
+        pop.setBackgroundDrawable(bg)
+        pop.isFocusable = true
+        pop.isOutsideTouchable = true
+        pop.elevation = ctx.dp(4).toFloat()
+        pop.showAsDropDown(box, 0, ctx.dp(4))
+    }
+    addView(box, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = gap(10) })
+    return box
 }

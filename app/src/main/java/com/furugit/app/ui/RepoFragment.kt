@@ -34,8 +34,12 @@ class RepoFragment : BaseFragment() {
                 r.name + (if (isActive) "   ● aktif" else ""),
                 r.path,
                 onClick = {
-                    RepoStore.activePath = r.path
-                    refresh()
+                    if (isActive) {
+                        (requireActivity() as MainActivity).openTab(R.id.nav_changes)
+                    } else {
+                        RepoStore.activePath = r.path
+                        refresh()
+                    }
                 },
                 onLong = { removeDialog(r) }
             )
@@ -46,7 +50,7 @@ class RepoFragment : BaseFragment() {
             }
         }
         content.space(12)
-        content.hint("Tap = jadikan aktif · tekan lama = hapus dari daftar (file di HP tidak dihapus).")
+        content.hint("Tap = jadikan aktif · tap repo aktif = buka tab Perubahan · tekan lama = hapus dari daftar (file di HP tidak dihapus).")
     }
 
     private fun loadInfo(r: RepoEntry, tv: TextView) {

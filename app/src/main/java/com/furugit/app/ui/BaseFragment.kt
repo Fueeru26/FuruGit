@@ -27,7 +27,7 @@ abstract class BaseFragment : Fragment() {
         content = LinearLayout(requireContext())
         content.orientation = LinearLayout.VERTICAL
         val p = requireContext().dp(16)
-        content.setPadding(p, p, p, p)
+        content.setPadding(p, p, p, p * 2)
         sv.addView(content, ViewGroup.LayoutParams(MATCH, WRAP))
         return sv
     }

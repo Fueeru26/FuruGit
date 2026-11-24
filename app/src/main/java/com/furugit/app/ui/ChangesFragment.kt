@@ -119,6 +119,19 @@ class ChangesFragment : BaseFragment() {
         etMsg.onChange { msg = it }
         val etDesc = body.input("Deskripsi (opsional)", desc, multiline = true)
         etDesc.onChange { desc = it }
+        body.button("Pesan terakhir", true) {
+            gitQuiet("Pesan terakhir", { GitEngine.use(r.path) { GitEngine.lastMessage(it) } }) { last ->
+                if (last.isNullOrBlank()) {
+                    Dialogs.toast(ctx, "Belum ada commit.")
+                } else {
+                    val head = last.substringBefore("\n").trim()
+                    val rest = last.substringAfter("\n", "").trim()
+                    etMsg.setText(head)
+                    etDesc.setText(rest)
+                    Dialogs.toast(ctx, "Pesan commit terakhir dimuat")
+                }
+            }
+        }
         body.hrow {
             button("Commit") { doCommit(r) }
             button("Commit & Push") { doQuickSync(r) }

@@ -78,82 +78,60 @@ class SettingsHomeFragment : BaseFragment() {
 
 class AppSettingsFragment : BaseFragment() {
 
-    /** Kartu pilihan tunggal: baris yang dipilih diberi tanda centang. */
-    private fun LinearLayout.options(items: List<String>, selected: Int, onPick: (Int) -> Unit) {
-        card {
-            items.forEachIndexed { i, text ->
-                val row = LinearLayout(context)
-                row.orientation = LinearLayout.HORIZONTAL
-                row.gravity = Gravity.CENTER_VERTICAL
-                row.minimumHeight = context.dp(44)
-                row.isClickable = true
-                row.setOnClickListener { onPick(i) }
-                val tv = TextView(context)
-                tv.text = text
-                tv.textSize = 16f
-                tv.typeface = if (i == selected) Fonts.bold(context) else Fonts.regular(context)
-                tv.setTextColor(context.color(R.color.furu_text))
-                row.addView(tv, LinearLayout.LayoutParams(0, WRAP, 1f))
-                if (i == selected) {
-                    val iv = ImageView(context)
-                    iv.setImageResource(R.drawable.ic_check)
-                    iv.imageTintList = ColorStateList.valueOf(context.color(R.color.furu_accent))
-                    row.addView(iv, LinearLayout.LayoutParams(context.dp(24), context.dp(24)))
-                }
-                addView(row, LinearLayout.LayoutParams(MATCH, WRAP))
-            }
-        }
-    }
-
-    private fun swatches(parent: LinearLayout) {
+    /** Pilihan warna: lingkaran 48dp bernama, bisa digulir ke samping (seperti FuruArc). */
+    private fun LinearLayout.swatches() {
         val dark = Pal.isDark(ctx)
-        val all = Accent.values().toList()
         val cur = Accent.of(Prefs.accent)
-        parent.card {
-            for (chunk in all.chunked(5)) {
-                val line = LinearLayout(context)
-                line.orientation = LinearLayout.HORIZONTAL
-                for (a in chunk) {
-                    val cell = FrameLayout(context)
-                    val dot = FrameLayout(context)
-                    val bg = GradientDrawable()
-                    bg.shape = GradientDrawable.OVAL
-                    bg.setColor(if (dark) a.dark else a.light)
-                    if (a == cur) bg.setStroke(context.dp(3), context.color(R.color.furu_text))
-                    dot.background = bg
-                    if (a == cur) {
-                        val iv = ImageView(context)
-                        iv.setImageResource(R.drawable.ic_check)
-                        iv.imageTintList = ColorStateList.valueOf(if (dark) Color.parseColor("#101214") else Color.WHITE)
-                        dot.addView(iv, FrameLayout.LayoutParams(context.dp(24), context.dp(24), Gravity.CENTER))
-                    }
-                    dot.setOnClickListener {
-                        if (a != Accent.of(Prefs.accent)) {
-                            Prefs.accent = a.id
-                            requireActivity().recreate()
-                        }
-                    }
-                    cell.addView(dot, FrameLayout.LayoutParams(context.dp(44), context.dp(44), Gravity.CENTER))
-                    line.addView(cell, LinearLayout.LayoutParams(0, context.dp(56), 1f))
-                }
-                // isi sisa sel agar lingkaran sejajar dengan baris di atasnya
-                for (k in chunk.size until 5) line.addView(android.view.View(context), LinearLayout.LayoutParams(0, context.dp(56), 1f))
-                addView(line, LinearLayout.LayoutParams(MATCH, WRAP))
+        val sv = android.widget.HorizontalScrollView(context)
+        sv.isHorizontalScrollBarEnabled = false
+        val line = LinearLayout(context)
+        line.orientation = LinearLayout.HORIZONTAL
+        for (a in Accent.values()) {
+            val selected = a == cur
+            val col = LinearLayout(context)
+            col.orientation = LinearLayout.VERTICAL
+            col.gravity = Gravity.CENTER_HORIZONTAL
+            val dot = FrameLayout(context)
+            val bg = GradientDrawable()
+            bg.shape = GradientDrawable.OVAL
+            bg.setColor(if (dark) a.dark else a.light)
+            dot.background = bg
+            if (selected) {
+                val iv = ImageView(context)
+                iv.setImageResource(R.drawable.ic_check)
+                iv.imageTintList = ColorStateList.valueOf(if (dark) Color.parseColor("#101214") else Color.WHITE)
+                dot.addView(iv, FrameLayout.LayoutParams(context.dp(24), context.dp(24), Gravity.CENTER))
             }
-            label(tr("Warna terpilih: ", "Selected color: ") + (if (L.isId) cur.nameId else cur.nameEn), 13f, dim = true)
+            col.addView(dot, LinearLayout.LayoutParams(context.dp(48), context.dp(48)))
+            val name = TextView(context)
+            name.text = if (L.isId) a.nameId else a.nameEn
+            name.textSize = 11f
+            name.typeface = Fonts.regular(context)
+            name.maxLines = 1
+            name.setTextColor(context.color(if (selected) R.color.furu_text else R.color.furu_muted))
+            col.addView(name, LinearLayout.LayoutParams(WRAP, WRAP).apply { topMargin = context.dp(4) })
+            col.setOnClickListener {
+                if (a != Accent.of(Prefs.accent)) {
+                    Prefs.accent = a.id
+                    requireActivity().recreate()
+                }
+            }
+            line.addView(col, LinearLayout.LayoutParams(WRAP, WRAP).apply { marginEnd = context.dp(14) })
         }
+        sv.addView(line)
+        addView(sv, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = gap(10) })
     }
 
     override fun refresh() {
         content.removeAllViews()
 
         content.title(tr("Pengaturan Tampilan", "Appearance"))
-        content.label(tr("Mode Tema", "Theme Mode"), 15f, bold = true)
-        content.options(
-            listOf(tr("Ikuti Sistem", "Follow System"), tr("Terang", "Light"), tr("Gelap", "Dark")),
-            Prefs.themeMode
-        ) { i ->
-            if (i != Prefs.themeMode) {
+        content.card {
+            label(tr("Mode Tema", "Theme Mode"), 12f, dim = true)
+            dropdown(
+                listOf(tr("Ikuti Sistem", "Follow System"), tr("Terang", "Light"), tr("Gelap", "Dark")),
+                Prefs.themeMode
+            ) { i ->
                 Prefs.themeMode = i
                 AppCompatDelegate.setDefaultNightMode(
                     when (i) {
@@ -162,31 +140,24 @@ class AppSettingsFragment : BaseFragment() {
                         else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
                     }
                 )
-                refresh()
             }
+            label(tr("Warna Tema", "Theme Color"), 12f, dim = true, gap = 14)
+            swatches()
         }
-        content.space(8)
-        content.label(tr("Warna Tema", "Theme Color"), 15f, bold = true)
-        swatches(content)
 
         content.title(tr("Pengaturan Bahasa", "Language"))
-        val codes = listOf(L.SYSTEM, L.EN, L.ID)
-        content.options(
-            listOf(tr("Ikuti Sistem", "Follow System"), "English", "Indonesia"),
-            codes.indexOf(Prefs.lang).coerceAtLeast(0)
-        ) { i ->
-            if (codes[i] != Prefs.lang) {
+        content.card {
+            label(tr("Pilih Bahasa", "Choose Language"), 12f, dim = true)
+            val codes = listOf(L.SYSTEM, L.EN, L.ID)
+            dropdown(
+                listOf(tr("Ikuti Sistem", "Follow System"), "English", "Indonesia"),
+                codes.indexOf(Prefs.lang).coerceAtLeast(0)
+            ) { i ->
                 Prefs.lang = codes[i]
                 L.reload()
                 requireActivity().recreate()
             }
         }
-        content.hint(
-            tr(
-                "Ikuti Sistem: Indonesia jika bahasa perangkat Indonesia, selain itu Inggris.",
-                "Follow System: Indonesian if the device language is Indonesian, otherwise English."
-            )
-        )
     }
 }
 
@@ -375,6 +346,19 @@ class UpdateFragment : BaseFragment() {
 class AboutFragment : BaseFragment() {
     private var withLog = false
 
+    /** Ikon + tautan; hanya teksnya yang bisa diketuk (seperti FuruArc). */
+    private fun LinearLayout.iconLink(icon: Int, text: String, url: String) {
+        val r = LinearLayout(context)
+        r.orientation = LinearLayout.HORIZONTAL
+        r.gravity = Gravity.CENTER_VERTICAL
+        val iv = ImageView(context)
+        iv.setImageResource(icon)
+        iv.imageTintList = ColorStateList.valueOf(context.color(R.color.furu_text))
+        r.addView(iv, LinearLayout.LayoutParams(context.dp(22), context.dp(22)).apply { marginEnd = context.dp(10) })
+        r.linkText(text) { ctx.openLink(url) }
+        addView(r, LinearLayout.LayoutParams(WRAP, WRAP).apply { marginEnd = context.dp(28) })
+    }
+
     override fun refresh() {
         content.removeAllViews()
 
@@ -386,13 +370,11 @@ class AboutFragment : BaseFragment() {
             val col = LinearLayout(context)
             col.orientation = LinearLayout.VERTICAL
             col.label("Fueeru", 20f, bold = true)
-            col.label(tr("Pengembang FuruGit", "FuruGit developer"), 14f, dim = true)
+            col.label(tr("Pengembang FuruGit", "FuruGit developer"), 14f, dim = true, gap = 2)
             row.addView(col, LinearLayout.LayoutParams(0, WRAP, 1f))
             val logo = ImageView(context)
             logo.setImageResource(R.drawable.app_icon)
             logo.clipToOutline = true
-            val bg = GradientDrawable()
-            bg.cornerRadius = context.dp(12).toFloat()
             logo.outlineProvider = object : android.view.ViewOutlineProvider() {
                 override fun getOutline(v: android.view.View, o: android.graphics.Outline) {
                     o.setRoundRect(0, 0, v.width, v.height, v.context.dp(12).toFloat())
@@ -407,35 +389,21 @@ class AboutFragment : BaseFragment() {
             label(tr("Kontak", "Contact"), 12f, dim = true)
             val r = LinearLayout(context)
             r.orientation = LinearLayout.HORIZONTAL
-            r.linkText("Email") { ctx.openLink("mailto:fueerugame@gmail.com") }
-            r.addView(android.view.View(context), LinearLayout.LayoutParams(context.dp(28), 1))
-            r.linkText("Github") { ctx.openLink(Updater.REPO_URL) }
-            addView(r, LinearLayout.LayoutParams(MATCH, WRAP))
-            label("fueerugame@gmail.com · Fueeru26/FuruGit", 12f, dim = true)
+            r.iconLink(R.drawable.ic_email, "Email", "mailto:fueerugame@gmail.com")
+            r.iconLink(R.drawable.ic_github, "Github", Updater.REPO_URL)
+            addView(r, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = gap(10) })
         }
 
-        // Donasi
+        // Donasi: hanya nama platform yang menjadi tautan
         content.card {
             label(tr("Donasi", "Donation"), 12f, dim = true)
             val r = LinearLayout(context)
-            r.orientation = LinearLayout.VERTICAL
-            fun item(name: String, note: String, url: String) {
-                val line = LinearLayout(context)
-                line.orientation = LinearLayout.HORIZONTAL
-                line.gravity = Gravity.CENTER_VERTICAL
-                line.linkText(name) { ctx.openLink(url) }
-                val n = TextView(context)
-                n.text = "  $note"
-                n.textSize = 13f
-                n.typeface = Fonts.regular(context)
-                n.setTextColor(context.color(R.color.furu_muted))
-                line.addView(n)
-                r.addView(line)
-            }
-            item("Ko-fi", tr("(Untuk Global)", "(For Global)"), "https://ko-fi.com/fueeru")
-            item("Trakteer", tr("(Khusus ID)", "(Indonesia only)"), "https://trakteer.id/fueeru")
-            addView(r, LinearLayout.LayoutParams(MATCH, WRAP))
-            label(tr("Dukungan Anda membantu pengembangan berikutnya. Terima kasih!", "Your support helps further development. Thank you!"), 13f, dim = true)
+            r.orientation = LinearLayout.HORIZONTAL
+            r.linkText("Ko-fi") { ctx.openLink("https://ko-fi.com/fueeru") }
+            r.addView(android.view.View(context), LinearLayout.LayoutParams(context.dp(28), 1))
+            r.linkText("Trakteer") { ctx.openLink("https://trakteer.id/fueeru") }
+            addView(r, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = gap(10) })
+            label(tr("Dukungan Anda membantu pengembangan berikutnya. Terima kasih!", "Your support helps further development. Thank you!"), 13f, dim = true, gap = 6)
         }
 
         // Lapor masalah
@@ -445,14 +413,15 @@ class AboutFragment : BaseFragment() {
                 tr(
                     "Membuka aplikasi email Anda dengan alamat pengembang, versi aplikasi, dan info perangkat sudah terisi. Tidak ada yang dikirim otomatis; Anda bisa mengubah isinya sebelum mengirim.",
                     "Opens your email app with the developer's address, app version and device info filled in. Nothing is sent automatically; you can edit the message before sending."
-                ), 13f, dim = true
+                ), 14f, dim = true, gap = 10
             )
             val cb = CheckBox(context)
             cb.text = tr("Sertakan log aktivitas terakhir", "Include the latest activity log")
             cb.typeface = Fonts.regular(context)
+            cb.setTextColor(context.color(R.color.furu_text))
             cb.isChecked = withLog
             cb.setOnCheckedChangeListener { _, on -> withLog = on }
-            addView(cb)
+            addView(cb, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = gap(10) })
             button(tr("Kirim laporan lewat email", "Send report by email")) {
                 sure("Kirim laporan?", "Aplikasi email akan terbuka dengan laporan yang sudah terisi.", "Buka email") { sendReport() }
             }
@@ -461,13 +430,12 @@ class AboutFragment : BaseFragment() {
         // Tentang Aplikasi (paling bawah)
         content.card {
             label(tr("Tentang Aplikasi", "About the App"), 12f, dim = true)
-            label("FuruGit ${Updater.current(ctx)}", 20f, bold = true)
-            space(4)
+            label("FuruGit ${Updater.current(ctx)}", 20f, bold = true, gap = 10)
             label(
                 tr(
                     "FuruGit adalah klien Git untuk Android yang menjalankan perintah Git lewat tombol, tanpa perlu mengetik command. Kelola repository langsung di penyimpanan HP: clone, commit, branch, merge, stash, pull/push, riwayat, dan penyelesaian konflik, dengan konfirmasi sebelum setiap aksi penting. Semua berjalan di perangkatmu memakai JGit, tanpa server perantara.",
                     "FuruGit is a Git client for Android that runs Git commands with buttons, with no need to type commands. Manage repositories directly in your phone's storage: clone, commit, branch, merge, stash, pull/push, history and conflict resolution, with a confirmation before every important action. Everything runs on your device using JGit, with no middle server."
-                ), 14f
+                ), 14f, gap = 6
             )
         }
     }

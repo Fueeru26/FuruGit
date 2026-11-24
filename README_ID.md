@@ -41,7 +41,7 @@ Antarmuka tersedia dalam **bahasa Indonesia dan Inggris** (mengikuti bahasa sist
 | Tab | Fungsi |
 | --- | --- |
 | **Repo** | Clone dari GitHub, Init repository baru, buka folder repository yang sudah ada (lewat path asli, mis. `/storage/emulated/0/FuruArc/Github/FuruArc`), pilih repository aktif. |
-| **Perubahan** | Status, Stage terpilih / Stage semua, Unstage, Buang perubahan terpilih, diff berwarna, Commit, **Commit & Push** (stage, commit, cek remote, push), penyelesaian konflik (Milik saya / Milik remote / Edit manual), Batalkan merge. |
+| **Perubahan** | Status, Stage terpilih / Stage semua, Unstage, Buang perubahan terpilih, diff berwarna, Commit (dengan tombol **Pesan terakhir**), **Commit & Push** (stage, commit, cek remote, push), penyelesaian konflik (Milik saya / Milik remote / Edit manual), Batalkan merge. |
 | **Branch** | Branch lokal dan remote; buat, pindah, merge, dan hapus; Stash (simpan, apply, pop, drop, hapus semua). |
 | **Sync** | Fetch, Pull (merge atau rebase), Push aman (selalu fetch dulu, tidak pernah memaksa), kelola remote. |
 | **Riwayat** | Log per branch, Cherry-pick, Revert, Reset soft / mixed / HARD, Tag (buat, push, hapus), salin hash commit. |

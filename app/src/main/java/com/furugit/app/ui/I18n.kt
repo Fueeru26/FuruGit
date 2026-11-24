@@ -84,6 +84,8 @@ private val D: List<Pair<String, String>> = listOf(
     "Konfirmasi" to "Confirm", "Lanjutkan" to "Continue", "Jalankan" to "Run", "Perhatian" to "Notice",
     "{} gagal" to "{} failed",
     // Repo
+    "Pesan terakhir" to "Last message", "Pesan commit terakhir dimuat" to "Last commit message loaded",
+    "Tap = jadikan aktif · tap repo aktif = buka tab Perubahan · tekan lama = hapus dari daftar (file di HP tidak dihapus)." to "Tap = make active · tap the active repo = open the Changes tab · long press = remove from list (files on your phone are not deleted).",
     "Buka folder" to "Open folder", "Belum ada repository. Clone dari GitHub, buat baru dengan Init, atau buka folder repo yang sudah ada di HP." to "No repositories yet. Clone from GitHub, create one with Init, or open an existing repo folder on your phone.",
     "{}   ● aktif" to "{}   ● active",
     "Memuat status…" to "Loading status…",

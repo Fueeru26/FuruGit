@@ -478,6 +478,14 @@ object GitEngine {
 
     // ------------------------------------------------------------------ history
 
+    /** Pesan lengkap commit terakhir (HEAD), atau null bila belum ada commit. */
+    fun lastMessage(g: Git): String? {
+        val head = g.repository.resolve("HEAD") ?: return null
+        org.eclipse.jgit.revwalk.RevWalk(g.repository).use { w ->
+            return w.parseCommit(head).fullMessage.trim()
+        }
+    }
+
     fun log(g: Git, ref: String?, max: Int = 150): List<CommitInfo> {
         val start = g.repository.resolve(ref ?: "HEAD") ?: return emptyList()
         return g.log().add(start).setMaxCount(max).call().map {

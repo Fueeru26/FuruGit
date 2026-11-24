@@ -41,7 +41,7 @@ The interface is available in **Indonesian and English** (it follows the system 
 | Tab | What it does |
 | --- | --- |
 | **Repo** | Clone from GitHub, Init a new repository, open an existing repository folder (by real path, for example `/storage/emulated/0/FuruArc/Github/FuruArc`), choose the active repository. |
-| **Changes** | Status, Stage selected / Stage all, Unstage, Discard selected changes, coloured diff, Commit, **Commit & Push** (stage, commit, check the remote, push), conflict resolution (Mine / Theirs / manual Edit), Abort merge. |
+| **Changes** | Status, Stage selected / Stage all, Unstage, Discard selected changes, coloured diff, Commit (with a **Last message** button), **Commit & Push** (stage, commit, check the remote, push), conflict resolution (Mine / Theirs / manual Edit), Abort merge. |
 | **Branch** | Local and remote branches; create, switch, merge and delete; Stash (save, apply, pop, drop, delete all). |
 | **Sync** | Fetch, Pull (merge or rebase), safe Push (always fetches first, never forces), manage remotes. |
 | **History** | Log per branch, Cherry-pick, Revert, Reset soft / mixed / HARD, Tags (create, push, delete), copy a commit hash. |
