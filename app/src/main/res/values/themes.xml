@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.FuruGit" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/furu_accent</item>
+        <item name="colorOnPrimary">@color/furu_on_accent</item>
+        <item name="colorSecondary">@color/furu_accent</item>
+        <item name="colorOnSecondary">@color/furu_on_accent</item>
+        <item name="colorSecondaryContainer">@color/furu_trailing_bg</item>
+        <item name="colorOnSecondaryContainer">@color/furu_accent</item>
+        <item name="android:colorBackground">@color/furu_background</item>
+        <item name="colorSurface">@color/furu_card</item>
+        <item name="colorOnSurface">@color/furu_text</item>
+        <item name="colorSurfaceVariant">@color/furu_card</item>
+        <item name="colorOnSurfaceVariant">@color/furu_muted</item>
+        <item name="colorOutline">@color/furu_outline</item>
+        <item name="colorOutlineVariant">@color/furu_card_border</item>
+        <item name="colorSurfaceContainerLowest">@color/furu_card</item>
+        <item name="colorSurfaceContainerLow">@color/furu_card</item>
+        <item name="colorSurfaceContainer">@color/furu_card</item>
+        <item name="colorSurfaceContainerHigh">@color/furu_card</item>
+        <item name="colorSurfaceContainerHighest">@color/furu_card</item>
+        <item name="colorControlNormal">@color/furu_muted</item>
+        <item name="colorControlActivated">@color/furu_accent</item>
+        <item name="android:windowBackground">@color/furu_background</item>
+        <item name="android:statusBarColor">@color/furu_background</item>
+        <item name="android:navigationBarColor">@color/furu_card</item>
+        <item name="android:textColorPrimary">@color/furu_text</item>
+        <item name="android:textColorSecondary">@color/furu_muted</item>
+        <item name="android:fontFamily">@font/qanelas</item>
+        <item name="fontFamily">@font/qanelas</item>
+        <item name="shapeAppearanceLargeComponent">@style/Shape.FuruGit</item>
+        <item name="shapeAppearanceMediumComponent">@style/Shape.FuruGit</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.FuruGit.BodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.FuruGit.BodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/TextAppearance.FuruGit.BodySmall</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.FuruGit.TitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.FuruGit.TitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/TextAppearance.FuruGit.TitleSmall</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.FuruGit.LabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/TextAppearance.FuruGit.LabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/TextAppearance.FuruGit.LabelSmall</item>
+        <item name="textAppearanceHeadlineSmall">@style/TextAppearance.FuruGit.HeadlineSmall</item>
+        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.FuruGit.HeadlineSmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.FuruGit.HeadlineSmall</item>
+    </style>
+
+    <style name="Shape.FuruGit" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">10dp</item>
+    </style>
+
+    <style name="TextAppearance.FuruGit.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">@font/qanelas</item>
+    </style>
+    <style name="TextAppearance.FuruGit.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">@font/qanelas</item>
+    </style>
+    <style name="TextAppearance.FuruGit.BodySmall" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:fontFamily">@font/qanelas</item>
+    </style>
+    <style name="TextAppearance.FuruGit.TitleLarge" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/qanelas_semibold</item>
+    </style>
+    <style name="TextAppearance.FuruGit.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:fontFamily">@font/qanelas_semibold</item>
+    </style>
+    <style name="TextAppearance.FuruGit.TitleSmall" parent="TextAppearance.Material3.TitleSmall">
+        <item name="android:fontFamily">@font/qanelas_semibold</item>
+    </style>
+    <style name="TextAppearance.FuruGit.LabelLarge" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/qanelas_bold</item>
+    </style>
+    <style name="TextAppearance.FuruGit.LabelMedium" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:fontFamily">@font/qanelas_semibold</item>
+    </style>
+    <style name="TextAppearance.FuruGit.LabelSmall" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:fontFamily">@font/qanelas_semibold</item>
+    </style>
+    <style name="TextAppearance.FuruGit.HeadlineSmall" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:fontFamily">@font/qanelas_bold</item>
+    </style>
+
+    <style name="TextAppearance.FuruGit.Header" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/qanelas_bold</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:textColor">@color/furu_header</item>
+    </style>
+    <style name="TextAppearance.FuruGit.NavActive" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:fontFamily">@font/qanelas_bold</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+    <style name="TextAppearance.FuruGit.NavInactive" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:fontFamily">@font/qanelas</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+</resources>

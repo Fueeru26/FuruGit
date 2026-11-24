@@ -1,0 +1,78 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+// Kunci rilis tidak pernah disimpan di repo. Dibaca dari variabel lingkungan (CI) atau dari
+// keystore.properties yang tidak di-commit (build lokal). Tanpa itu, assembleRelease menghasilkan APK tanpa tanda tangan.
+def ksProps = new Properties()
+def ksPropsFile = rootProject.file('keystore.properties')
+if (ksPropsFile.exists()) ksPropsFile.withInputStream { ksProps.load(it) }
+def ksFile = System.getenv('ANDROID_KEYSTORE_FILE') ?: ksProps.getProperty('storeFile')
+def ksPassword = System.getenv('ANDROID_KEYSTORE_PASSWORD') ?: ksProps.getProperty('storePassword')
+def ksAlias = System.getenv('ANDROID_KEY_ALIAS') ?: ksProps.getProperty('keyAlias')
+def ksKeyPassword = System.getenv('ANDROID_KEY_PASSWORD') ?: ksProps.getProperty('keyPassword')
+def hasReleaseSigning = ksFile && ksPassword && ksAlias && ksKeyPassword
+
+android {
+    namespace 'com.furugit.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.furugit.app"
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName "1.00"
+    }
+
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile file(ksFile)
+                storePassword ksPassword
+                keyAlias ksAlias
+                keyPassword ksKeyPassword
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (hasReleaseSigning) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    packagingOptions {
+        resources {
+            excludes += [
+                'META-INF/DEPENDENCIES', 'META-INF/LICENSE', 'META-INF/LICENSE.txt',
+                'META-INF/NOTICE', 'META-INF/NOTICE.txt', 'META-INF/INDEX.LIST',
+                'META-INF/AL2.0', 'META-INF/LGPL2.1', 'about.html', 'plugin.properties'
+            ]
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.fragment:fragment-ktx:1.6.2'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+
+    // Git engine (JGit 5.13.x = versi terakhir yang kompatibel Java 8 / Android)
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:5.13.3.202401111512-r'
+    implementation 'org.slf4j:slf4j-nop:1.7.36'
+}

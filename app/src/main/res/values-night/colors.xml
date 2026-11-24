@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="furu_background">#11161D</color>
+    <color name="furu_card">#1D242F</color>
+    <color name="furu_icon_bg">#253E63</color>
+    <color name="furu_trailing_bg">#233551</color>
+    <color name="furu_text">#E6E8EB</color>
+    <color name="furu_muted">#9EAEC4</color>
+    <color name="furu_accent">#307DEF</color>
+    <color name="furu_on_accent">#101214</color>
+    <color name="furu_disabled_bg">#2C333D</color>
+    <color name="furu_disabled_fg">#8C9196</color>
+    <color name="furu_outline">#738CB1</color>
+    <color name="furu_card_border">#323843</color>
+    <color name="furu_header">#FFFFFF</color>
+</resources>
