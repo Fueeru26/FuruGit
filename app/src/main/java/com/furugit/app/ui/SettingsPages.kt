@@ -62,7 +62,7 @@ class SettingsHomeFragment : BaseFragment() {
         row(R.drawable.ic_shield, "Pengaturan Github", "GitHub Settings",
             "Izin penyimpanan, identitas Git, akun dan autentikasi", "Storage permission, Git identity, accounts and authentication") { GithubSettingsFragment() }
         row(R.drawable.ic_tune, "Pengaturan Aplikasi", "App Settings",
-            "Tampilan (mode dan warna tema) dan bahasa", "Appearance (theme mode and color) and language") { AppSettingsFragment() }
+            "Mode tema dan bahasa", "Theme mode and language") { AppSettingsFragment() }
         row(R.drawable.ic_log, "Log Aktivitas", "Activity Log",
             "Catatan operasi Git yang dijalankan", "Record of the Git operations that were run") { LogFragment() }
         row(R.drawable.ic_guide, "Panduan", "Guide",
@@ -78,56 +78,12 @@ class SettingsHomeFragment : BaseFragment() {
 
 class AppSettingsFragment : BaseFragment() {
 
-    /** Pilihan warna: lingkaran 48dp bernama, bisa digulir ke samping (seperti FuruArc). */
-    private fun LinearLayout.swatches() {
-        val dark = Pal.isDark(ctx)
-        val cur = Accent.of(Prefs.accent)
-        val sv = android.widget.HorizontalScrollView(context)
-        sv.isHorizontalScrollBarEnabled = false
-        val line = LinearLayout(context)
-        line.orientation = LinearLayout.HORIZONTAL
-        for (a in Accent.values()) {
-            val selected = a == cur
-            val col = LinearLayout(context)
-            col.orientation = LinearLayout.VERTICAL
-            col.gravity = Gravity.CENTER_HORIZONTAL
-            val dot = FrameLayout(context)
-            val bg = GradientDrawable()
-            bg.shape = GradientDrawable.OVAL
-            bg.setColor(if (dark) a.dark else a.light)
-            dot.background = bg
-            if (selected) {
-                val iv = ImageView(context)
-                iv.setImageResource(R.drawable.ic_check)
-                iv.imageTintList = ColorStateList.valueOf(if (dark) Color.parseColor("#101214") else Color.WHITE)
-                dot.addView(iv, FrameLayout.LayoutParams(context.dp(24), context.dp(24), Gravity.CENTER))
-            }
-            col.addView(dot, LinearLayout.LayoutParams(context.dp(48), context.dp(48)))
-            val name = TextView(context)
-            name.text = if (L.isId) a.nameId else a.nameEn
-            name.textSize = 11f
-            name.typeface = Fonts.regular(context)
-            name.maxLines = 1
-            name.setTextColor(context.color(if (selected) R.color.furu_text else R.color.furu_muted))
-            col.addView(name, LinearLayout.LayoutParams(WRAP, WRAP).apply { topMargin = context.dp(4) })
-            col.setOnClickListener {
-                if (a != Accent.of(Prefs.accent)) {
-                    Prefs.accent = a.id
-                    requireActivity().recreate()
-                }
-            }
-            line.addView(col, LinearLayout.LayoutParams(WRAP, WRAP).apply { marginEnd = context.dp(14) })
-        }
-        sv.addView(line)
-        addView(sv, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = gap(10) })
-    }
-
     override fun refresh() {
         content.removeAllViews()
 
         content.title(tr("Pengaturan Tampilan", "Appearance"))
         content.card {
-            label(tr("Mode Tema", "Theme Mode"), 12f, dim = true)
+            sectionLabel(tr("Mode Tema", "Theme Mode"))
             dropdown(
                 listOf(tr("Ikuti Sistem", "Follow System"), tr("Terang", "Light"), tr("Gelap", "Dark")),
                 Prefs.themeMode
@@ -141,13 +97,11 @@ class AppSettingsFragment : BaseFragment() {
                     }
                 )
             }
-            label(tr("Warna Tema", "Theme Color"), 12f, dim = true, gap = 14)
-            swatches()
         }
 
         content.title(tr("Pengaturan Bahasa", "Language"))
         content.card {
-            label(tr("Pilih Bahasa", "Choose Language"), 12f, dim = true)
+            sectionLabel(tr("Pilih Bahasa", "Choose Language"))
             val codes = listOf(L.SYSTEM, L.EN, L.ID)
             dropdown(
                 listOf(tr("Ikuti Sistem", "Follow System"), "English", "Indonesia"),

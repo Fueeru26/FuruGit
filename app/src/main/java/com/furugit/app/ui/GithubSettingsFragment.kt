@@ -16,7 +16,6 @@ import com.furugit.app.data.DeviceFlow
 import com.furugit.app.data.GitHubApi
 import com.furugit.app.data.Prefs
 import com.furugit.app.git.friendly
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
@@ -120,7 +119,7 @@ class GithubSettingsFragment : BaseFragment() {
             try {
                 val self = currentCoroutineContext()[Job]
                 val code = DeviceFlow.requestCode(cid)
-                dlg = MaterialAlertDialogBuilder(act)
+                dlg = Dialogs.builder(act)
                     .setTitle(tx("Login GitHub"))
                     .setMessage(tx("Buka {} lalu masukkan kode:\n\n{}\n\nMenunggu persetujuan…").replaceFirst("{}", code.verificationUri).replaceFirst("{}", code.userCode))
                     .setPositiveButton(tx("Salin kode & buka GitHub"), null)

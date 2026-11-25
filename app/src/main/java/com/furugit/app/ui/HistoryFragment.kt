@@ -11,6 +11,7 @@ import com.furugit.app.git.GitEngine
 import org.eclipse.jgit.api.ResetCommand
 
 class HistoryFragment : BaseFragment() {
+    override val tabPage: Boolean get() = true
 
     private var viewRef: String? = null
 
@@ -24,7 +25,7 @@ class HistoryFragment : BaseFragment() {
         }
         val list = LinearLayout(ctx)
         list.orientation = LinearLayout.VERTICAL
-        content.addView(list, LinearLayout.LayoutParams(MATCH, WRAP))
+        content.addView(list, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ctx.dp(16) })
         gitQuiet("Log", { GitEngine.use(r.path) { GitEngine.log(it, viewRef) } }) { commits ->
             list.removeAllViews()
             if (commits.isEmpty()) list.hint("Belum ada commit.")

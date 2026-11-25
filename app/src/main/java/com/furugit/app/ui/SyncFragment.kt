@@ -12,6 +12,7 @@ import com.furugit.app.data.StatusInfo
 import com.furugit.app.git.GitEngine
 
 class SyncFragment : BaseFragment() {
+    override val tabPage: Boolean get() = true
 
     private var remote: String? = null
 
@@ -78,7 +79,7 @@ class SyncFragment : BaseFragment() {
         cb.text = tx("Pull dengan rebase (lanjutan; default: merge)")
         cb.isChecked = Prefs.pullRebase
         cb.setOnCheckedChangeListener { _, on -> Prefs.pullRebase = on }
-        body.addView(cb)
+        body.addView(cb, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ctx.dp(16) })
         body.hint("Push selalu fetch dulu dan menolak jika remote lebih baru. Tidak ada push paksa.")
 
         body.title("Daftar remote")

@@ -10,7 +10,6 @@ import android.os.Environment
 import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.io.File
 import java.io.FileFilter
 
@@ -57,7 +56,7 @@ object FolderPicker {
         if (hasUp) items.add("⬆  ..")
         for (s in subs) items.add("📁  " + s.name + (if (File(s, ".git").exists()) "   [git]" else ""))
 
-        val b = MaterialAlertDialogBuilder(ctx)
+        val b = Dialogs.builder(ctx)
             .setTitle(tx(title) + "\n" + here.absolutePath)
             .setItems(items.toTypedArray()) { _, i ->
                 if (hasUp && i == 0) pick(ctx, here.parentFile!!, title, allowCreate, onPick)

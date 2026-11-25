@@ -49,12 +49,6 @@ object Prefs {
             sp.edit().putInt("theme_mode", v).apply()
         }
 
-    var accent: String
-        get() = sp.getString("accent", "blue") ?: "blue"
-        set(v) {
-            sp.edit().putString("accent", v).apply()
-        }
-
     /** "system", "en", atau "id" */
     var lang: String
         get() = sp.getString("lang", "system") ?: "system"

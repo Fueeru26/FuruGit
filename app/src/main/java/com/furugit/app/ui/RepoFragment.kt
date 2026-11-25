@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 class RepoFragment : BaseFragment() {
+    override val tabPage: Boolean get() = true
 
     override fun refresh() {
         content.removeAllViews()
@@ -31,7 +32,7 @@ class RepoFragment : BaseFragment() {
             val isActive = r.path == active
             val col = content.rowCard(
                 R.drawable.ic_folder,
-                r.name + (if (isActive) "   ● aktif" else ""),
+                r.name,
                 r.path,
                 onClick = {
                     if (isActive) {
@@ -41,7 +42,8 @@ class RepoFragment : BaseFragment() {
                         refresh()
                     }
                 },
-                onLong = { removeDialog(r) }
+                onLong = { removeDialog(r) },
+                badge = if (isActive) tr("Aktif", "Active") else null
             )
             if (isActive) {
                 col.space(6)

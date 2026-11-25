@@ -10,6 +10,7 @@ import com.furugit.app.data.StatusInfo
 import com.furugit.app.git.GitEngine
 
 class BranchesFragment : BaseFragment() {
+    override val tabPage: Boolean get() = true
 
     override fun refresh() {
         content.removeAllViews()

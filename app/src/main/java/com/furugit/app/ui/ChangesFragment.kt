@@ -12,6 +12,7 @@ import com.furugit.app.data.StatusInfo
 import com.furugit.app.git.GitEngine
 
 class ChangesFragment : BaseFragment() {
+    override val tabPage: Boolean get() = true
 
     private var msg = ""
     private var desc = ""

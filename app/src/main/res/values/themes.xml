@@ -23,7 +23,7 @@
         <item name="colorControlActivated">@color/furu_accent</item>
         <item name="android:windowBackground">@color/furu_background</item>
         <item name="android:statusBarColor">@color/furu_background</item>
-        <item name="android:navigationBarColor">@color/furu_card</item>
+        <item name="android:navigationBarColor">@color/furu_background</item>
         <item name="android:textColorPrimary">@color/furu_text</item>
         <item name="android:textColorSecondary">@color/furu_muted</item>
         <item name="android:fontFamily">@font/qanelas</item>

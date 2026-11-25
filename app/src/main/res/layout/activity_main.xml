@@ -1,55 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/furu_background"
-    android:fitsSystemWindows="true"
-    android:id="@+id/root"
-    android:orientation="vertical">
+    android:fitsSystemWindows="true">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
+    <!-- Latar bunga biru (bg_blossom) diisi dari kode sesuai mode terang / gelap -->
+    <com.furugit.app.ui.TopCropImageView
+        android:id="@+id/bg"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:background="@color/furu_background"
-        app:navigationIconTint="@color/furu_text"
-        app:titleCentered="false"
-        app:titleMarginStart="0dp"
-        app:titleTextAppearance="@style/TextAppearance.FuruGit.Header" />
+        android:layout_height="match_parent" />
 
-    <com.google.android.material.progressindicator.LinearProgressIndicator
-        android:id="@+id/progress"
+    <!-- Halaman = kepala + isi; seluruhnya ikut beranimasi saat pindah layar -->
+    <LinearLayout
+        android:id="@+id/page"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:indeterminate="true"
-        android:visibility="gone"
-        app:indicatorColor="@color/furu_accent" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
+        <FrameLayout
+            android:id="@+id/header"
+            android:layout_width="match_parent"
+            android:layout_height="64dp" />
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:visibility="gone"
+            app:indicatorColor="@color/furu_accent" />
+
+        <FrameLayout
+            android:id="@+id/container"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+    </LinearLayout>
+
+    <!-- Bilah navigasi kaca melayang di atas isi (dibuat dari kode) -->
     <FrameLayout
-        android:id="@+id/container"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-    <View
-        android:id="@+id/divider"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/furu_card_border" />
-
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/nav"
+        android:id="@+id/navHolder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/furu_card"
-        app:backgroundTint="@color/furu_card"
-        app:elevation="0dp"
-        app:itemIconTint="@color/furu_nav_item"
-        app:itemRippleColor="@android:color/transparent"
-        app:itemTextAppearanceActive="@style/TextAppearance.FuruGit.NavActive"
-        app:itemTextAppearanceInactive="@style/TextAppearance.FuruGit.NavInactive"
-        app:itemTextColor="@color/furu_nav_item"
-        app:labelVisibilityMode="labeled"
-        app:menu="@menu/bottom_nav" />
-</LinearLayout>
+        android:layout_gravity="bottom" />
+</FrameLayout>

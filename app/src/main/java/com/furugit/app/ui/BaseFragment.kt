@@ -21,14 +21,28 @@ abstract class BaseFragment : Fragment() {
     protected lateinit var content: LinearLayout
     protected val ctx get() = requireContext()
 
+    /** true untuk kelima halaman tab (bilah navigasi tampil, jadi isi diberi ruang di bawah). */
+    protected open val tabPage: Boolean get() = false
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        val sv = ScrollView(requireContext())
+        val c = requireContext()
+        val sv = ScrollView(c)
         sv.isFillViewport = true
-        content = LinearLayout(requireContext())
+        sv.clipChildren = false
+        sv.clipToPadding = false
+        sv.overScrollMode = View.OVER_SCROLL_NEVER
+        content = LinearLayout(c)
         content.orientation = LinearLayout.VERTICAL
-        val p = requireContext().dp(16)
-        content.setPadding(p, p, p, p * 2)
+        content.clipChildren = false
+        content.clipToPadding = false
+        val p = c.dp(16)
+        // halaman tab memberi ruang 92dp untuk bilah navigasi kaca yang melayang di atas isi
+        content.setPadding(p, 0, p, p + (if (tabPage) c.dp(92) else 0))
         sv.addView(content, ViewGroup.LayoutParams(MATCH, WRAP))
+        sv.setOnScrollChangeListener { _, _, y, _, oy ->
+            Jelly.onScrolled(y - oy)
+            (activity as? MainActivity)?.onPageScroll(y - oy)
+        }
         return sv
     }
 
@@ -66,14 +80,21 @@ abstract class BaseFragment : Fragment() {
                 if (!quiet) ActivityLog.add("▶ $title")
                 val result = block()
                 if (!quiet) ActivityLog.add("✔ $title")
-                if (isAdded && view != null) onDone(result)
+                if (isAdded && view != null) {
+                    onDone(result)
+                    // aksi yang mengembalikan OpResult menampilkan hasilnya lewat showResult()
+                    if (!quiet && result !is OpResult) {
+                        Dialogs.result(requireContext(), true, tx(title) + " " + tr("berhasil", "succeeded"))
+                    }
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
                 val msg = e.friendly()
                 ActivityLog.add("✘ $title: $msg")
                 if (isAdded && view != null) {
-                    if (quiet) Dialogs.toast(requireContext(), msg) else Dialogs.info(requireContext(), tx("$title gagal"), msg)
+                    if (quiet) Dialogs.toast(requireContext(), msg)
+                    else Dialogs.result(requireContext(), false, tx("$title gagal") + "\n\n" + msg)
                 }
             } finally {
                 act.setBusy(false)
@@ -88,10 +109,10 @@ abstract class BaseFragment : Fragment() {
     protected fun showResult(res: OpResult) {
         ActivityLog.add((if (res.ok) "✔ " else "⚠ ") + res.message)
         if (res.ok) {
-            Dialogs.toast(ctx, res.message)
+            Dialogs.result(ctx, true, res.message)
         } else {
             val extra = if (res.conflicts.isNotEmpty()) "\n\nFile:\n" + res.conflicts.joinToString("\n") { "• $it" } else ""
-            Dialogs.info(ctx, "Perhatian", res.message + extra)
+            Dialogs.result(ctx, false, res.message + extra)
         }
     }
 }

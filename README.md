@@ -18,7 +18,7 @@
 
 **FuruGit** is an Android Git client that runs Git commands with **buttons instead of typed commands**. Clone, stage, commit, branch, merge, stash, pull, push, browse history and resolve conflicts, all on your phone, directly on the repositories in your storage. It uses [JGit](https://www.eclipse.org/jgit/), so everything runs on the device with no server in between.
 
-The interface is available in **Indonesian and English** (it follows the system language by default), with light and dark themes and nine accent colors.
+The interface is available in **Indonesian and English** (it follows the system language by default), with light and dark themes in the same Blue Blossom look as FuruArc.
 
 > **Note**
 > FuruGit changes files in your repositories. Every button that runs an action asks for confirmation first, but actions such as *Discard changes* and *Reset HARD* cannot be undone.
@@ -69,7 +69,7 @@ Git commands and their buttons:
 Tap the gear icon in the top bar.
 
 - **GitHub Settings**: storage permission, Git identity (name and email for commits), accounts and authentication.
-- **App Settings**: theme mode (Follow System, Light, Dark), theme color (Blue, Light Blue, Green, Teal, Purple, Pink, Orange, Red, Yellow) and language (Follow System, English, Indonesian). *Follow System* uses Indonesian when the device language is Indonesian, otherwise English.
+- **App Settings**: theme mode (Follow System, Light, Dark) and language (Follow System, English, Indonesian). *Follow System* uses Indonesian when the device language is Indonesian, otherwise English.
 - **Activity Log**: the operations that were run; copy or clear them.
 - **Guide**: what Git is, its commands, how the app works, resolving conflicts and troubleshooting.
 - **Check for Updates**: looks for a newer release of this repository, shows the notes, downloads the APK and opens the system installer.
