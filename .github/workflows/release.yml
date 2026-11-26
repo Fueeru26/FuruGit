@@ -13,6 +13,8 @@ name: Release
 on:
   push:
     tags: [ 'v*' ]
+  # manual run (API / app): pass the tag as ref (for example v1.06), the tag check below reads GITHUB_REF_NAME
+  workflow_dispatch:
 
 permissions:
   contents: write
