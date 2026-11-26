@@ -42,6 +42,31 @@ object Http {
     }
 }
 
+/** Permintaan ke REST API GitHub (blocking; panggil dari Dispatchers.IO). */
+fun Http.api(method: String, url: String, token: String, json: String? = null): Pair<Int, String> {
+    val c = URL(url).openConnection() as HttpURLConnection
+    try {
+        c.requestMethod = method
+        c.connectTimeout = 15000
+        c.readTimeout = 30000
+        c.setRequestProperty("Accept", "application/vnd.github+json")
+        c.setRequestProperty("User-Agent", "FuruGit")
+        c.setRequestProperty("X-GitHub-Api-Version", "2022-11-28")
+        c.setRequestProperty("Authorization", "Bearer $token")
+        if (method == "POST") {
+            c.doOutput = true
+            c.setRequestProperty("Content-Type", "application/json")
+            c.outputStream.use { it.write((json ?: "{}").toByteArray()) }
+        }
+        val code = c.responseCode
+        val stream = if (code in 200..299) c.inputStream else c.errorStream
+        val text = stream?.bufferedReader()?.use { it.readText() } ?: ""
+        return code to text
+    } finally {
+        c.disconnect()
+    }
+}
+
 object GitHubApi {
     /** Mengembalikan username pemilik token, atau melempar GitUserError jika token ditolak. */
     suspend fun username(token: String): String = withContext(Dispatchers.IO) {

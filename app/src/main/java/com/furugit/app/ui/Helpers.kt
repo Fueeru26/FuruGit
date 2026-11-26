@@ -56,16 +56,9 @@ object FolderPicker {
         if (hasUp) items.add("⬆  ..")
         for (s in subs) items.add("📁  " + s.name + (if (File(s, ".git").exists()) "   [git]" else ""))
 
-        val b = Dialogs.builder(ctx)
-            .setTitle(tx(title) + "\n" + here.absolutePath)
-            .setItems(items.toTypedArray()) { _, i ->
-                if (hasUp && i == 0) pick(ctx, here.parentFile!!, title, allowCreate, onPick)
-                else pick(ctx, subs[if (hasUp) i - 1 else i], title, allowCreate, onPick)
-            }
-            .setPositiveButton(tx("Pilih folder ini")) { _, _ -> onPick(here) }
-            .setNegativeButton(tx("Batal"), null)
+        val buttons = ArrayList<DBtn>()
         if (allowCreate) {
-            b.setNeutralButton(tx("Folder baru")) { _, _ ->
+            buttons.add(DBtn(tx("Folder baru")) {
                 Dialogs.prompt(ctx, "Folder baru", "Nama folder") { name ->
                     if (name.isNotBlank() && !name.contains('/')) {
                         val f = File(here, name)
@@ -73,8 +66,13 @@ object FolderPicker {
                         pick(ctx, if (f.isDirectory) f else here, title, allowCreate, onPick)
                     }
                 }
-            }
+            })
         }
-        b.show()
+        buttons.add(DBtn(tx("Batal")))
+        buttons.add(DBtn(tx("Pilih folder ini"), true) { onPick(here) })
+        Dialogs.chooseWith(ctx, tx(title) + "\n" + here.absolutePath, items, buttons) { i ->
+            if (hasUp && i == 0) pick(ctx, here.parentFile!!, title, allowCreate, onPick)
+            else pick(ctx, subs[if (hasUp) i - 1 else i], title, allowCreate, onPick)
+        }
     }
 }

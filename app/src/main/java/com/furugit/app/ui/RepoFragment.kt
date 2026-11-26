@@ -7,7 +7,11 @@ import com.furugit.app.data.Prefs
 import com.furugit.app.data.RepoEntry
 import com.furugit.app.data.RepoStore
 import com.furugit.app.git.GitEngine
+import androidx.lifecycle.lifecycleScope
+import com.furugit.app.git.friendly
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -30,6 +34,7 @@ class RepoFragment : BaseFragment() {
         val active = RepoStore.activePath
         for (r in repos) {
             val isActive = r.path == active
+            val badge = if (isActive) Badge(ctx, tr("Aktif", "Active")) else null
             val col = content.rowCard(
                 R.drawable.ic_folder,
                 r.name,
@@ -43,30 +48,54 @@ class RepoFragment : BaseFragment() {
                     }
                 },
                 onLong = { removeDialog(r) },
-                badge = if (isActive) tr("Aktif", "Active") else null
+                badge = badge
             )
             if (isActive) {
                 col.space(6)
                 val info = col.label("Memuat status…", 13f)
-                loadInfo(r, info)
+                loadInfo(r, info, badge!!)
             }
         }
         content.space(12)
         content.hint("Tap = jadikan aktif · tap repo aktif = buka tab Perubahan · tekan lama = hapus dari daftar (file di HP tidak dihapus).")
     }
 
-    private fun loadInfo(r: RepoEntry, tv: TextView) {
-        gitQuiet("Status ${r.name}", {
-            GitEngine.use(r.path) { g -> Pair(GitEngine.status(g), GitEngine.remotes(g)) }
-        }) { (st, remotes) ->
-            val sb = StringBuilder()
-            sb.append("Branch: ").append(st.branch)
-            if (st.hasTracking) sb.append("  ↑").append(st.ahead).append(" ↓").append(st.behind)
-            val n = st.staged.size + st.unstaged.size
-            sb.append("\n").append(if (n == 0) "Bersih, tidak ada perubahan" else "$n file berubah")
-            if (st.isMerging) sb.append("\nStatus: ").append(st.state)
-            sb.append("\nRemote: ").append(if (remotes.isEmpty()) "(belum ada)" else remotes.joinToString { it.name + " → " + it.url })
-            tv.text = tx(sb.toString())
+    /**
+     * Memuat status repo aktif lalu mengecek koneksi ke remote. Penanda "Aktif" putih / hitam saat memuat,
+     * hijau bila terhubung, dan menjadi "Gagal" merah bila gagal (mis. tidak ada koneksi internet).
+     */
+    private fun loadInfo(r: RepoEntry, tv: TextView, badge: Badge) {
+        val act = requireActivity() as MainActivity
+        viewLifecycleOwner.lifecycleScope.launch {
+            act.setBusy(true)
+            try {
+                val (st, remotes) = GitEngine.use(r.path) { g -> Pair(GitEngine.status(g), GitEngine.remotes(g)) }
+                val sb = StringBuilder()
+                sb.append("Branch: ").append(st.branch)
+                if (st.hasTracking) sb.append("  ↑").append(st.ahead).append(" ↓").append(st.behind)
+                val n = st.staged.size + st.unstaged.size
+                sb.append("\n").append(if (n == 0) "Bersih, tidak ada perubahan" else "$n file berubah")
+                if (st.isMerging) sb.append("\nStatus: ").append(st.state)
+                sb.append("\nRemote: ").append(if (remotes.isEmpty()) "(belum ada)" else remotes.joinToString { it.name + " → " + it.url })
+                if (view == null) return@launch
+                tv.text = tx(sb.toString())
+                val url = (remotes.firstOrNull { it.name == "origin" } ?: remotes.firstOrNull())?.url
+                if (url == null || GitEngine.reachable(url)) {
+                    badge.set(Badge.OK)
+                } else {
+                    badge.set(Badge.FAIL, tr("Gagal", "Failed"))
+                    tv.text = tx(sb.toString()) + "\n" + tr("Tidak bisa terhubung ke remote (periksa koneksi internet).", "Cannot reach the remote (check your internet connection).")
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                if (view != null) {
+                    badge.set(Badge.FAIL, tr("Gagal", "Failed"))
+                    tv.text = tx(e.friendly())
+                }
+            } finally {
+                act.setBusy(false)
+            }
         }
     }
 

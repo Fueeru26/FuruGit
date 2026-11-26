@@ -44,7 +44,7 @@ Antarmuka tersedia dalam **bahasa Indonesia dan Inggris** (mengikuti bahasa sist
 | **Perubahan** | Status, Stage terpilih / Stage semua, Unstage, Buang perubahan terpilih, diff berwarna, Commit (dengan tombol **Pesan terakhir**), **Commit & Push** (stage, commit, cek remote, push), penyelesaian konflik (Milik saya / Milik remote / Edit manual), Batalkan merge. |
 | **Branch** | Branch lokal dan remote; buat, pindah, merge, dan hapus; Stash (simpan, apply, pop, drop, hapus semua). |
 | **Sync** | Fetch, Pull (merge atau rebase), Push aman (selalu fetch dulu, tidak pernah memaksa), kelola remote. |
-| **Riwayat** | Log per branch, Cherry-pick, Revert, Reset soft / mixed / HARD, Tag (buat, push, hapus), salin hash commit. |
+| **Aksi** | Run GitHub Actions repo aktif (filter branch / tag), jalankan ulang, buka, hapus run atau seluruh workflow, dan **Jalankan Aksi** untuk memindai `.github/workflows` lalu menjalankan ulang job yang dicentang (mis. debug-apk, unit-tests) tanpa commit baru. *Riwayat commit* (log, Cherry-pick, Revert, Reset soft / mixed / HARD, Tag, salin hash) ada sebagai tombol di bawah tab ini. |
 
 Perintah Git dan tombolnya:
 
@@ -58,7 +58,7 @@ Perintah Git dan tombolnya:
 | `git branch` / `git switch` / `git merge` | Tab Branch |
 | `git stash` | Branch > Stash perubahan |
 | `git fetch` / `pull` / `push` / `remote` | Tab Sync |
-| `git log` / `reset` / `revert` / `cherry-pick` / `tag` | Tab Riwayat |
+| `git log` / `reset` / `revert` / `cherry-pick` / `tag` | Tab Aksi › Riwayat commit |
 
 **Konfirmasi sebelum setiap aksi.** Tombol yang mengeksekusi sesuatu (stage, commit, commit & push, fetch, pull, push, pindah branch, apply / pop stash, reset, push atau hapus tag, selesaikan konflik, init, simpan identitas, login GitHub, pasang pembaruan) membuka jendela konfirmasi lebih dulu.
 

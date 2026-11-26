@@ -236,7 +236,8 @@ fun LinearLayout.rowCard(
     sub: String? = null,
     onClick: (() -> Unit)? = null,
     onLong: (() -> Unit)? = null,
-    badge: String? = null
+    badge: Badge? = null,
+    titleBadge: Badge? = null
 ): LinearLayout {
     var col: LinearLayout? = null
     glassCard(true, onClick, onLong) {
@@ -262,13 +263,19 @@ fun LinearLayout.rowCard(
         val c = LinearLayout(context)
         c.orientation = LinearLayout.VERTICAL
         row.addView(c, LinearLayout.LayoutParams(0, WRAP, 1f))
-        val t = TextView(context)
-        t.text = tx(title)
-        t.textSize = 16f
-        t.lineH(24f)
-        t.typeface = Fonts.semibold(context)
-        t.setTextColor(pal.text)
-        c.addView(t, LinearLayout.LayoutParams(MATCH, WRAP))
+        if (titleBadge != null) {
+            titleBadge.view.textSize = 16f
+            titleBadge.view.lineH(24f)
+            c.addView(titleBadge.view, LinearLayout.LayoutParams(MATCH, WRAP))
+        } else {
+            val t = TextView(context)
+            t.text = tx(title)
+            t.textSize = 16f
+            t.lineH(24f)
+            t.typeface = Fonts.semibold(context)
+            t.setTextColor(pal.text)
+            c.addView(t, LinearLayout.LayoutParams(MATCH, WRAP))
+        }
         if (sub != null) {
             val s = TextView(context)
             s.text = tx(sub)
@@ -279,16 +286,8 @@ fun LinearLayout.rowCard(
             c.addView(s, LinearLayout.LayoutParams(MATCH, WRAP))
         }
         if (badge != null) {
-            // penanda di ujung kanan kartu: titik besar + teks, hijau
-            val b = TextView(context)
-            val sp = android.text.SpannableString("● $badge")
-            sp.setSpan(android.text.style.RelativeSizeSpan(1.6f), 0, 1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            b.text = sp
-            b.textSize = 14f
-            b.typeface = Fonts.bold(context)
-            b.setTextColor(0xFF2FBF71.toInt())
-            b.setSingleLine(true)
-            row.addView(b, LinearLayout.LayoutParams(WRAP, WRAP).apply { marginStart = context.dp(8) })
+            // penanda di ujung kanan kartu
+            row.addView(badge.view, LinearLayout.LayoutParams(WRAP, WRAP).apply { marginStart = context.dp(8) })
         }
         addView(row, LinearLayout.LayoutParams(MATCH, WRAP))
         col = c
@@ -304,6 +303,56 @@ fun EditText.onChange(block: (String) -> Unit) {
             block(s?.toString() ?: "")
         }
     })
+}
+
+/** Tombol di dasar dialog. [keepOpen] = dialog tetap terbuka setelah ditekan. */
+class DBtn(
+    val label: String,
+    val primary: Boolean = false,
+    val keepOpen: Boolean = false,
+    val onClick: (androidx.appcompat.app.AlertDialog) -> Unit = {}
+)
+
+/**
+ * Penanda status berawalan titik besar ("● Aktif"). Warna teks menunjukkan keadaan:
+ * memuat = putih (mode gelap) / hitam (mode terang), terhubung = hijau, gagal = merah.
+ */
+class Badge(private val ctx: Context, private var base: String, size: Float = 14f, semibold: Boolean = false, state: Int = LOADING) {
+    val view = TextView(ctx)
+
+    init {
+        view.textSize = size
+        view.typeface = if (semibold) Fonts.semibold(ctx) else Fonts.bold(ctx)
+        view.setSingleLine(true)
+        view.ellipsize = TextUtils.TruncateAt.END
+        set(state)
+    }
+
+    /** Mengubah keadaan; [text] opsional untuk mengganti tulisan (mis. "Aktif" jadi "Gagal"). */
+    fun set(state: Int, text: String = base) {
+        base = text
+        val pal = Pal.of(ctx)
+        val col = when (state) {
+            OK -> 0xFF2FBF71.toInt()
+            FAIL -> 0xFFE5484D.toInt()
+            WARN -> 0xFFF2A93B.toInt()
+            MUTED -> pal.muted
+            else -> pal.text
+        }
+        val label = text.replaceFirstChar { it.uppercaseChar() }
+        val sp = android.text.SpannableString("● $label")
+        sp.setSpan(android.text.style.RelativeSizeSpan(1.6f), 0, 1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        view.text = sp
+        view.setTextColor(col)
+    }
+
+    companion object {
+        const val LOADING = 0
+        const val OK = 1
+        const val FAIL = 2
+        const val WARN = 3
+        const val MUTED = 4
+    }
 }
 
 object Dialogs {
@@ -323,19 +372,79 @@ object Dialogs {
         return b
     }
 
+    /**
+     * Dialog kaca dengan tombol disusun dalam SATU baris (kolom sama lebar), bukan bertumpuk per baris.
+     * Dialog dengan satu tombol memakai tombol selebar 160dp di bawah tengah.
+     */
+    fun show(
+        ctx: Context,
+        title: String?,
+        message: CharSequence?,
+        view: View?,
+        buttons: List<DBtn>,
+        cancelable: Boolean = true
+    ): androidx.appcompat.app.AlertDialog {
+        val pal = Pal.of(ctx)
+        val root = LinearLayout(ctx)
+        root.orientation = LinearLayout.VERTICAL
+        root.setPadding(ctx.dp(24), ctx.dp(24), ctx.dp(24), ctx.dp(20))
+        if (title != null) {
+            val t = TextView(ctx)
+            t.text = tx(title)
+            t.textSize = 20f
+            t.typeface = Fonts.bold(ctx)
+            t.setTextColor(pal.text)
+            root.addView(t, LinearLayout.LayoutParams(MATCH, WRAP))
+        }
+        val body = LinearLayout(ctx)
+        body.orientation = LinearLayout.VERTICAL
+        if (message != null) {
+            val m = TextView(ctx)
+            m.text = message
+            m.textSize = 15f
+            m.typeface = Fonts.regular(ctx)
+            m.setTextColor(pal.muted)
+            m.setLineSpacing(0f, 1.2f)
+            body.addView(m, LinearLayout.LayoutParams(MATCH, WRAP))
+        }
+        if (view != null) body.addView(view, LinearLayout.LayoutParams(MATCH, WRAP))
+        val sv = android.widget.ScrollView(ctx)
+        sv.addView(body)
+        root.addView(sv, LinearLayout.LayoutParams(MATCH, 0, 1f).apply { topMargin = ctx.dp(if (title != null) 12 else 0) })
+        val row = LinearLayout(ctx)
+        row.orientation = LinearLayout.HORIZONTAL
+        row.gravity = Gravity.CENTER_HORIZONTAL
+        row.clipChildren = false
+        val b = builder(ctx).setView(root).setCancelable(cancelable)
+        val dlg = b.create()
+        buttons.forEachIndexed { i, x ->
+            val btn = FuruButton(ctx, x.primary)
+            btn.text = tx(x.label)
+            btn.setOnClickListener {
+                x.onClick(dlg)
+                if (!x.keepOpen) dlg.dismiss()
+            }
+            val lp = if (buttons.size == 1) LinearLayout.LayoutParams(ctx.dp(160), ctx.dp(44))
+            else LinearLayout.LayoutParams(0, ctx.dp(44), 1f).apply { if (i > 0) marginStart = ctx.dp(8) }
+            row.addView(btn, lp)
+        }
+        if (buttons.isNotEmpty()) root.addView(row, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ctx.dp(20) })
+        dlg.show()
+        return dlg
+    }
+
     fun info(ctx: Context, title: String, msg: String) {
-        builder(ctx).setTitle(tx(title)).setMessage(tx(msg)).setPositiveButton("OK", null).show()
+        show(ctx, title, tx(msg), null, listOf(DBtn(tr("Tutup", "Close"), true)))
     }
 
     /**
-     * Jendela hasil aksi: ceklis hijau (berhasil) atau silang merah (gagal) beranimasi dengan teks pemberitahuan di bawahnya.
-     * Yang berhasil menutup sendiri setelah sekitar 2 detik; keduanya bisa diketuk untuk ditutup.
+     * Jendela hasil aksi: ceklis hijau (berhasil) atau silang merah (gagal) beranimasi pelan dengan teks
+     * pemberitahuan di bawahnya. Ditutup manual lewat tombol "Tutup" di bawah tengah.
      */
     fun result(ctx: Context, ok: Boolean, message: String) {
         val box = LinearLayout(ctx)
         box.orientation = LinearLayout.VERTICAL
         box.gravity = Gravity.CENTER_HORIZONTAL
-        box.setPadding(ctx.dp(24), ctx.dp(24), ctx.dp(24), ctx.dp(8))
         box.addView(ResultMark(ctx, ok), LinearLayout.LayoutParams(ctx.dp(88), ctx.dp(88)))
         val tv = TextView(ctx)
         tv.text = tx(message)
@@ -345,47 +454,58 @@ object Dialogs {
         tv.setTextColor(Pal.of(ctx).text)
         tv.setLineSpacing(0f, 1.2f)
         box.addView(tv, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ctx.dp(16) })
-        val sv = android.widget.ScrollView(ctx)
-        sv.addView(box)
-        val b = builder(ctx).setView(sv)
-        if (!ok) b.setPositiveButton("OK", null)
-        val d = b.show()
-        if (ok) {
-            sv.setOnClickListener { d.dismiss() }
-            box.setOnClickListener { d.dismiss() }
-            box.postDelayed({ if (d.isShowing) d.dismiss() }, 2000L)
-        }
+        show(ctx, null, null, box, listOf(DBtn(tr("Tutup", "Close"), true)))
     }
 
     fun confirm(ctx: Context, title: String, msg: String, okLabel: String = "Ya", onYes: () -> Unit) {
-        builder(ctx).setTitle(tx(title)).setMessage(tx(msg))
-            .setPositiveButton(tx(okLabel)) { _, _ -> onYes() }
-            .setNegativeButton(tx("Batal"), null).show()
+        show(ctx, title, tx(msg), null, listOf(DBtn(tr("Batal", "Cancel")), DBtn(okLabel, true) { onYes() }))
     }
 
     fun prompt(ctx: Context, title: String, hint: String, default: String = "", onOk: (String) -> Unit) {
-        val box = vbox(ctx, 20)
+        val box = vbox(ctx, 0)
         val et = box.input(hint, default)
-        builder(ctx).setTitle(tx(title)).setView(box)
-            .setPositiveButton("OK") { _, _ -> onOk(et.text.toString().trim()) }
-            .setNegativeButton(tx("Batal"), null).show()
+        show(ctx, title, null, box, listOf(DBtn(tr("Batal", "Cancel")), DBtn("OK", true) { onOk(et.text.toString().trim()) }))
     }
 
+    /** Daftar pilihan: ketuk salah satu baris untuk memilih. */
     fun choose(ctx: Context, title: String, items: List<String>, onPick: (Int) -> Unit) {
-        builder(ctx).setTitle(tx(title))
-            .setItems(items.map { tx(it) }.toTypedArray()) { _, i -> onPick(i) }
-            .setNegativeButton(tx("Batal"), null).show()
+        chooseWith(ctx, title, items, emptyList(), onPick)
+    }
+
+    /** Seperti [choose], dengan tombol tambahan di dasar dialog (mis. "Pilih folder ini"). */
+    fun chooseWith(ctx: Context, title: String, items: List<String>, buttons: List<DBtn>, onPick: (Int) -> Unit) {
+        val pal = Pal.of(ctx)
+        val list = vbox(ctx, 0)
+        var dlg: androidx.appcompat.app.AlertDialog? = null
+        items.forEachIndexed { i, text ->
+            val tv = TextView(ctx)
+            tv.text = text
+            tv.textSize = 16f
+            tv.typeface = Fonts.regular(ctx)
+            tv.setTextColor(pal.text)
+            tv.gravity = Gravity.CENTER_VERTICAL
+            tv.minimumHeight = ctx.dp(48)
+            tv.isClickable = true
+            val mask = GradientDrawable()
+            mask.cornerRadius = ctx.dpf(8f)
+            mask.setColor(Color.WHITE)
+            tv.background = RippleDrawable(ColorStateList.valueOf(pal.text.withAlpha(30)), null, mask)
+            tv.setPadding(ctx.dp(8), ctx.dp(6), ctx.dp(8), ctx.dp(6))
+            tv.setOnClickListener {
+                dlg?.dismiss()
+                onPick(i)
+            }
+            list.addView(tv, LinearLayout.LayoutParams(MATCH, WRAP))
+        }
+        val bs = buttons.ifEmpty { listOf(DBtn(tr("Batal", "Cancel"))) }
+        dlg = show(ctx, title, null, list, bs)
     }
 
     /** Dialog dengan isi bebas. [build] mengisi kotak; [onOk] dipanggil saat tombol utama ditekan. */
     fun form(ctx: Context, title: String, okLabel: String, build: (LinearLayout) -> Unit, onOk: () -> Unit) {
-        val box = vbox(ctx, 20)
+        val box = vbox(ctx, 0)
         build(box)
-        val sv = android.widget.ScrollView(ctx)
-        sv.addView(box)
-        builder(ctx).setTitle(tx(title)).setView(sv)
-            .setPositiveButton(tx(okLabel)) { _, _ -> onOk() }
-            .setNegativeButton(tx("Batal"), null).show()
+        show(ctx, title, null, box, listOf(DBtn(tr("Batal", "Cancel")), DBtn(okLabel, true) { onOk() }))
     }
 
     fun text(ctx: Context, title: String, body: CharSequence) {
@@ -395,12 +515,10 @@ object Dialogs {
         tv.typeface = Typeface.MONOSPACE
         tv.setHorizontallyScrolling(true)
         tv.setTextIsSelectable(true)
-        tv.setPadding(ctx.dp(16), ctx.dp(8), ctx.dp(16), ctx.dp(8))
+        tv.setTextColor(Pal.of(ctx).text)
         val h = android.widget.HorizontalScrollView(ctx)
         h.addView(tv)
-        val v = android.widget.ScrollView(ctx)
-        v.addView(h)
-        builder(ctx).setTitle(tx(title)).setView(v).setPositiveButton(tx("Tutup"), null).show()
+        show(ctx, title, null, h, listOf(DBtn(tr("Tutup", "Close"), true)))
     }
 }
 

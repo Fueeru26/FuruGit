@@ -34,8 +34,10 @@ class BranchesFragment : BaseFragment() {
         val local = bs.filter { !it.isRemote }
         if (local.isEmpty()) body.hint("Belum ada branch (buat commit pertama dulu).")
         for (b in local) {
-            body.rowCard(R.drawable.ic_branch, (if (b.isCurrent) "● " else "") + b.name,
-                if (b.isCurrent) "Branch aktif" else null, onClick = { branchActions(r, b, st) })
+            val tb = if (b.isCurrent) Badge(ctx, b.name, semibold = true) else null
+            body.rowCard(R.drawable.ic_branch, b.name,
+                if (b.isCurrent) "Branch aktif" else null, onClick = { branchActions(r, b, st) }, titleBadge = tb)
+            if (tb != null) checkRemote(r.path, null, tb)
         }
         val remote = bs.filter { it.isRemote }
         if (remote.isNotEmpty()) {

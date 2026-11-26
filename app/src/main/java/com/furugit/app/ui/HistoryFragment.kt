@@ -11,7 +11,6 @@ import com.furugit.app.git.GitEngine
 import org.eclipse.jgit.api.ResetCommand
 
 class HistoryFragment : BaseFragment() {
-    override val tabPage: Boolean get() = true
 
     private var viewRef: String? = null
 

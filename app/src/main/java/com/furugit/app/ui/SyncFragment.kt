@@ -84,8 +84,9 @@ class SyncFragment : BaseFragment() {
 
         body.title("Daftar remote")
         for (rm in remotes) {
-            body.rowCard(R.drawable.ic_sync, (if (rm.name == rn) "● " else "") + rm.name, rm.url,
-                onClick = { remoteActions(r, rm) })
+            val tb = if (rm.name == rn) Badge(ctx, rm.name, semibold = true) else null
+            body.rowCard(R.drawable.ic_sync, rm.name, rm.url, onClick = { remoteActions(r, rm) }, titleBadge = tb)
+            if (tb != null) checkRemote(r.path, rm.name, tb)
         }
         body.button("Tambah remote", true) { addRemote(r) }
     }

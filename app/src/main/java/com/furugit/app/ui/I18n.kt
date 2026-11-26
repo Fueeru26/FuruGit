@@ -63,7 +63,7 @@ fun tx(s: CharSequence): String {
 
 private val D: List<Pair<String, String>> = listOf(
     // navigasi & judul
-    "Repo" to "Repo", "Repositori" to "Repositories", "Perubahan" to "Changes", "Riwayat" to "History",
+    "Repo" to "Repo", "Repositori" to "Repositories", "Perubahan" to "Changes", "Riwayat" to "History", "Aksi" to "Actions",
     "Pengaturan" to "Settings", "Log aktivitas" to "Activity log", "Log Aktivitas" to "Activity Log",
     "Pengaturan Github" to "GitHub Settings", "Pengaturan Aplikasi" to "App Settings", "Panduan" to "Guide",
     "Periksa Pembaruan" to "Check for Updates", "Tentang" to "About",

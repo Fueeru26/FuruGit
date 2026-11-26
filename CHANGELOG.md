@@ -12,7 +12,7 @@ First release.
   - **Changes tab**: status, Stage selected / Stage all, Unstage, Discard selected changes, coloured diff, Commit, **Commit & Push**, conflict resolution (Mine / Theirs / manual Edit), Abort merge.
   - **Branch tab**: local and remote branches, create, switch, merge, delete; Stash (save, apply, pop, drop, delete all).
   - **Sync tab**: Fetch, Pull (merge or rebase), safe Push (always fetches first, never forces), manage remotes.
-  - **History tab**: log per branch, Cherry-pick, Revert, Reset soft / mixed / HARD, Tags (create, push, delete).
+  - **Actions tab** (was History): GitHub Actions runs (live from GitHub, so deleted runs / workflows disappear), re-run, open, delete a run or a workflow, and a **Run Actions** page that scans `.github/workflows` and re-runs ticked jobs without a new commit. The commit history (log, Cherry-pick, Revert, Reset, Tags) moved to a *Commit history* button in this tab.
 - **Confirmation window** before every button that runs an action (stage, commit, commit & push, fetch, pull, push, switch branch, stash apply / pop, reset, push / delete tag, resolve conflict, init, save identity, GitHub login, install update, and so on).
 - **Settings** (gear icon in the top bar):
   - **GitHub Settings**: storage permission, Git identity, accounts and authentication (Personal Access Token and OAuth Device Flow; tokens are stored encrypted).
@@ -22,6 +22,9 @@ First release.
   - **Check for Updates**: reads the releases of `Fueeru26/FuruGit`, shows the notes, downloads the APK and opens the system installer.
   - **About**: developer, contact, donation, problem report by email and "About the App".
 - **Design** identical to FuruArc's Blue Blossom look: blossom background image, glass cards with a light rim, blue glow and corner flowers, gradient buttons and icon badges, field-style inputs and dropdowns, the floating glass navigation bar, section titles with lines, the Qanelas font, and FuruArc's animations (springy press, staggered card entrance, scroll jelly, sliding tab / rising page / sinking back transitions). There is no theme color option; only theme mode and language.
+- Status markers ("● Active", the active branch and remote) are capitalised and coloured: white / black while loading, green when connected, red when the connection fails (the active repo then reads "● Failed").
+- Dialog buttons are now one row of equal columns instead of stacked lines; the result window has a centred **Close** button, no longer closes by itself, and its check / cross animates more slowly.
+- The loading bar sits centred between the tab title and the content.
 - **Result window**: after confirming an action, a window shows an animated green check (success) or red cross (failure) with a message below it.
 - A new app icon.
 - **Crash screen**: an unhandled crash is saved and shown on screen (separate `:crash` process) so the error message can be copied and reported.

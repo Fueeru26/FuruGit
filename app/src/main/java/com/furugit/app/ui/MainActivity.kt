@@ -63,6 +63,8 @@ class MainActivity : AppCompatActivity() {
         progress = findViewById(R.id.progress)
         progress.setIndicatorColor(pal.accent)
         progress.trackColor = pal.disabledBg
+        // bilah loading digeser ke atas agar pas di tengah antara judul tab dan isi
+        progress.translationY = -dp(10).toFloat()
 
         val bg = findViewById<TopCropImageView>(R.id.bg)
         bg.setImageResource(if (pal.dark) R.drawable.bg_blossom_dark else R.drawable.bg_blossom_light)
@@ -72,7 +74,7 @@ class MainActivity : AppCompatActivity() {
             Tab(R.id.nav_changes, R.drawable.ic_edit, "Perubahan", tx("Perubahan")),
             Tab(R.id.nav_branches, R.drawable.ic_branch, "Branch", "Branch"),
             Tab(R.id.nav_sync, R.drawable.ic_sync, "Sync", "Sync"),
-            Tab(R.id.nav_history, R.drawable.ic_history, "Riwayat", tx("Riwayat"))
+            Tab(R.id.nav_actions, R.drawable.ic_actions, "Aksi", tr("Aksi", "Actions"))
         )
         buildHeader(pal)
 
@@ -210,7 +212,7 @@ class MainActivity : AppCompatActivity() {
         R.id.nav_changes -> ChangesFragment()
         R.id.nav_branches -> BranchesFragment()
         R.id.nav_sync -> SyncFragment()
-        else -> HistoryFragment()
+        else -> ActionsFragment()
     }
 
     private fun selectTab(index: Int, animate: Boolean) {
@@ -264,18 +266,22 @@ class MainActivity : AppCompatActivity() {
     private fun dp(v: Int) = this.dp_(v)
 
     private fun askStorage() {
-        Dialogs.builder(this)
-            .setTitle(tx("Izin akses file"))
-            .setMessage(tx("FuruGit perlu izin \"Akses semua file\" agar bisa membuka dan mengubah folder repository langsung di penyimpanan HP."))
-            .setPositiveButton(tx("Beri izin")) { _, _ -> StorageAccess.request(this) }
-            .setNegativeButton(tx("Nanti"), null)
-            .show()
+        Dialogs.show(
+            this,
+            tx("Izin akses file"),
+            tx("FuruGit perlu izin \"Akses semua file\" agar bisa membuka dan mengubah folder repository langsung di penyimpanan HP."),
+            null,
+            listOf(
+                DBtn(tx("Nanti")),
+                DBtn(tx("Beri izin"), true) { StorageAccess.request(this) }
+            )
+        )
     }
 
     fun setBusy(b: Boolean) {
         busy += if (b) 1 else -1
         if (busy < 0) busy = 0
-        progress.visibility = if (busy > 0) View.VISIBLE else View.GONE
+        progress.visibility = if (busy > 0) View.VISIBLE else View.INVISIBLE
     }
 }
 

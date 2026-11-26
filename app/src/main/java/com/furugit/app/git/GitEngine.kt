@@ -366,6 +366,33 @@ object GitEngine {
         g.remoteRemove().setRemoteName(name).call()
     }
 
+    /** URL remote bernama [remote] (atau remote bawaan bila null); null bila repo belum punya remote. */
+    suspend fun remoteUrl(path: String, remote: String? = null): String? = use(path) { g ->
+        val n = remote ?: defaultRemote(g)
+        if (n == null) null else g.repository.config.getString("remote", n, "url")
+    }
+
+    /**
+     * Mengecek apakah remote bisa dihubungi (ls-remote). Gagal jaringan (tanpa internet, host tidak ketemu, timeout) = false.
+     * Gagal autentikasi atau repo privat tetap dihitung terhubung karena server berhasil dijangkau.
+     */
+    suspend fun reachable(url: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            Git.lsRemoteRepository().setRemote(url).setHeads(true).setTimeout(8)
+                .setCredentialsProvider(AuthStore.providerFor(url)).call()
+            true
+        } catch (e: Exception) {
+            val chain = generateSequence<Throwable>(e) { it.cause }.toList()
+            val all = chain.joinToString(" | ") { it.message ?: "" }
+            val net = chain.any {
+                it is java.net.UnknownHostException || it is java.net.ConnectException ||
+                    it is java.net.SocketTimeoutException || it is java.net.NoRouteToHostException
+            } || all.contains("Unable to resolve host", true) || all.contains("timed out", true) ||
+                all.contains("Network is unreachable", true) || all.contains("Failed to connect", true)
+            !net
+        }
+    }
+
     fun defaultRemote(g: Git): String? {
         val names = remotes(g).map { it.name }
         return if ("origin" in names) "origin" else names.firstOrNull()

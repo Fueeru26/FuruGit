@@ -589,10 +589,10 @@ class ResultMark(context: Context, private val ok: Boolean) : View(context) {
         super.onAttachedToWindow()
         scaleX = 0.6f
         scaleY = 0.6f
-        animate().scaleX(1f).scaleY(1f).setDuration(450L)
+        animate().scaleX(1f).scaleY(1f).setDuration(800L)
             .setInterpolator(android.view.animation.OvershootInterpolator(2f)).start()
         val a = ValueAnimator.ofFloat(0f, 1f)
-        a.duration = 800L
+        a.duration = 1600L
         a.addUpdateListener {
             p = it.animatedValue as Float
             invalidate()
@@ -613,8 +613,8 @@ class ResultMark(context: Context, private val ok: Boolean) : View(context) {
         val s = min(width, height).toFloat()
         val inset = paint.strokeWidth
         rect.set(inset, inset, s - inset, s - inset)
-        canvas.drawArc(rect, -90f, 360f * min(p / 0.55f, 1f), false, paint)
-        val t = ((p - 0.55f) / 0.45f).coerceIn(0f, 1f)
+        canvas.drawArc(rect, -90f, 360f * min(p / 0.5f, 1f), false, paint)
+        val t = ((p - 0.5f) / 0.5f).coerceIn(0f, 1f)
         if (t <= 0f) return
         if (ok) {
             path.reset()

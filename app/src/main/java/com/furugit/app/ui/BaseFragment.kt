@@ -12,6 +12,7 @@ import com.furugit.app.data.ActivityLog
 import com.furugit.app.data.OpResult
 import com.furugit.app.data.RepoEntry
 import com.furugit.app.data.RepoStore
+import com.furugit.app.git.GitEngine
 import com.furugit.app.git.friendly
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -98,6 +99,30 @@ abstract class BaseFragment : Fragment() {
                 }
             } finally {
                 act.setBusy(false)
+            }
+        }
+    }
+
+    /**
+     * Mengecek apakah remote repo bisa dihubungi, lalu mewarnai [badge]: hijau bila terhubung, merah bila gagal
+     * (mis. tanpa internet), abu-abu bila repo belum punya remote. Selama mengecek warnanya putih / hitam.
+     */
+    protected fun checkRemote(path: String, remote: String?, badge: Badge, failText: String? = null) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val url = GitEngine.remoteUrl(path, remote)
+                if (url == null) {
+                    badge.set(Badge.MUTED)
+                    return@launch
+                }
+                val ok = GitEngine.reachable(url)
+                if (ok) badge.set(Badge.OK)
+                else if (failText != null) badge.set(Badge.FAIL, failText)
+                else badge.set(Badge.FAIL)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                badge.set(Badge.FAIL)
             }
         }
     }

@@ -119,20 +119,22 @@ class GithubSettingsFragment : BaseFragment() {
             try {
                 val self = currentCoroutineContext()[Job]
                 val code = DeviceFlow.requestCode(cid)
-                dlg = Dialogs.builder(act)
-                    .setTitle(tx("Login GitHub"))
-                    .setMessage(tx("Buka {} lalu masukkan kode:\n\n{}\n\nMenunggu persetujuan…").replaceFirst("{}", code.verificationUri).replaceFirst("{}", code.userCode))
-                    .setPositiveButton(tx("Salin kode & buka GitHub"), null)
-                    .setNegativeButton(tx("Batal"), null)
-                    .setCancelable(false)
-                    .create()
+                dlg = Dialogs.show(
+                    act,
+                    tx("Login GitHub"),
+                    tx("Buka {} lalu masukkan kode:\n\n{}\n\nMenunggu persetujuan…").replaceFirst("{}", code.verificationUri).replaceFirst("{}", code.userCode),
+                    null,
+                    listOf(
+                        DBtn(tx("Batal")),
+                        DBtn(tx("Salin kode & buka GitHub"), true, keepOpen = true) {
+                            val cm = act.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            cm.setPrimaryClip(ClipData.newPlainText("kode", code.userCode))
+                            act.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(code.verificationUri)))
+                        }
+                    ),
+                    cancelable = false
+                )
                 dlg.setOnDismissListener { self?.cancel() }
-                dlg.show()
-                dlg.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                    val cm = act.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    cm.setPrimaryClip(ClipData.newPlainText("kode", code.userCode))
-                    act.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(code.verificationUri)))
-                }
                 val token = DeviceFlow.awaitToken(cid, code)
                 val user = GitHubApi.username(token)
                 AuthStore.save(Account("github.com", user, token, "OAuth"))

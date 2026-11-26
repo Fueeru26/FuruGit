@@ -44,7 +44,7 @@ The interface is available in **Indonesian and English** (it follows the system 
 | **Changes** | Status, Stage selected / Stage all, Unstage, Discard selected changes, coloured diff, Commit (with a **Last message** button), **Commit & Push** (stage, commit, check the remote, push), conflict resolution (Mine / Theirs / manual Edit), Abort merge. |
 | **Branch** | Local and remote branches; create, switch, merge and delete; Stash (save, apply, pop, drop, delete all). |
 | **Sync** | Fetch, Pull (merge or rebase), safe Push (always fetches first, never forces), manage remotes. |
-| **History** | Log per branch, Cherry-pick, Revert, Reset soft / mixed / HARD, Tags (create, push, delete), copy a commit hash. |
+| **Actions** | GitHub Actions runs of the active repo (filter by branch / tag), re-run, open and delete runs or a whole workflow, and **Run Actions** to scan `.github/workflows` and re-run ticked jobs (e.g. debug-apk, unit-tests) without a new commit. *Commit history* (log, Cherry-pick, Revert, Reset soft / mixed / HARD, Tags, copy a hash) is a button at the bottom of this tab. |
 
 Git commands and their buttons:
 
@@ -58,7 +58,7 @@ Git commands and their buttons:
 | `git branch` / `git switch` / `git merge` | Branch tab |
 | `git stash` | Branch > Stash changes |
 | `git fetch` / `pull` / `push` / `remote` | Sync tab |
-| `git log` / `reset` / `revert` / `cherry-pick` / `tag` | History tab |
+| `git log` / `reset` / `revert` / `cherry-pick` / `tag` | Actions tab › Commit history |
 
 **Confirmation before every action.** Buttons that execute something (stage, commit, commit & push, fetch, pull, push, switch branch, stash apply / pop, reset, push or delete a tag, resolve a conflict, init, save identity, GitHub login, install an update) open a confirmation window first.
 
