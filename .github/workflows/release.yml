@@ -72,6 +72,7 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           chmod +x ./gradlew
+          export FURUARC_JAVA="$JAVA_HOME/bin/java"
           ./gradlew assembleRelease --stacktrace
 
       - name: Verify the signature and name the files
