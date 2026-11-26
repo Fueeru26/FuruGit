@@ -34,7 +34,7 @@ class RepoFragment : BaseFragment() {
         val active = RepoStore.activePath
         for (r in repos) {
             val isActive = r.path == active
-            val badge = if (isActive) Badge(ctx, tr("Aktif", "Active")) else null
+            val badge = if (isActive) Badge(ctx, tr("Proses", "Processing")) else null
             val col = content.rowCard(
                 R.drawable.ic_folder,
                 r.name,
@@ -81,7 +81,7 @@ class RepoFragment : BaseFragment() {
                 tv.text = tx(sb.toString())
                 val url = (remotes.firstOrNull { it.name == "origin" } ?: remotes.firstOrNull())?.url
                 if (url == null || GitEngine.reachable(url)) {
-                    badge.set(Badge.OK)
+                    badge.set(Badge.OK, tr("Aktif", "Active"))
                 } else {
                     badge.set(Badge.FAIL, tr("Gagal", "Failed"))
                     tv.text = tx(sb.toString()) + "\n" + tr("Tidak bisa terhubung ke remote (periksa koneksi internet).", "Cannot reach the remote (check your internet connection).")

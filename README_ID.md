@@ -44,7 +44,7 @@ Antarmuka tersedia dalam **bahasa Indonesia dan Inggris** (mengikuti bahasa sist
 | **Perubahan** | Status, Stage terpilih / Stage semua, Unstage, Buang perubahan terpilih, diff berwarna, Commit (dengan tombol **Pesan terakhir**), **Commit & Push** (stage, commit, cek remote, push), penyelesaian konflik (Milik saya / Milik remote / Edit manual), Batalkan merge. |
 | **Branch** | Branch lokal dan remote; buat, pindah, merge, dan hapus; Stash (simpan, apply, pop, drop, hapus semua). |
 | **Sync** | Fetch, Pull (merge atau rebase), Push aman (selalu fetch dulu, tidak pernah memaksa), kelola remote. |
-| **Aksi** | Run GitHub Actions repo aktif (filter branch / tag), jalankan ulang, buka, hapus run atau seluruh workflow, dan **Jalankan Aksi** untuk memindai `.github/workflows` lalu menjalankan ulang job yang dicentang (mis. debug-apk, unit-tests) tanpa commit baru. *Riwayat commit* (log, Cherry-pick, Revert, Reset soft / mixed / HARD, Tag, salin hash) ada sebagai tombol di bawah tab ini. |
+| **Aksi** | Run GitHub Actions repo aktif (filter branch / tag), jalankan ulang, buka, hapus run (juga massal), unduh artefak dan log, lihat log, dan **Jalankan Aksi** untuk memindai `.github/workflows` lalu menjalankan ulang job yang dicentang (mis. debug-apk, unit-tests) tanpa commit baru. *Riwayat commit* (log, Cherry-pick, Revert, Reset soft / mixed / HARD, Tag, salin hash) ada sebagai tombol di bawah tab ini. |
 
 Perintah Git dan tombolnya:
 

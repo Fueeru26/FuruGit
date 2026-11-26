@@ -3,9 +3,11 @@ package com.furugit.app.ui
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import com.furugit.app.data.ActionsApi
+import com.furugit.app.data.DispatchInput
 import com.furugit.app.data.LocalJob
 import com.furugit.app.data.LocalWorkflow
 import com.furugit.app.data.OpResult
+import com.furugit.app.data.RunWatcher
 import com.furugit.app.data.RepoEntry
 import com.furugit.app.git.GitEngine
 import com.furugit.app.git.friendly
@@ -18,6 +20,7 @@ import kotlinx.coroutines.CancellationException
 class RunActionsFragment : BaseFragment() {
 
     private val selected = HashSet<String>()
+    private val inputValues = HashMap<String, String>()
 
     override fun refresh() {
         content.removeAllViews()
@@ -53,9 +56,69 @@ class RunActionsFragment : BaseFragment() {
                     cb.setOnCheckedChangeListener { _, on -> if (on) selected.add(key) else selected.remove(key) }
                     addView(cb, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = gap(6) })
                 }
+                if (w.dispatch) {
+                    sectionLabel(tr("Jalankan baru dengan input (workflow_dispatch)", "Run anew with inputs (workflow_dispatch)"))
+                    for (inp in w.inputs) inputControl(this, w, inp)
+                    button(tr("Jalankan workflow ini", "Run this workflow"), true) { dispatchWorkflow(r, w) }
+                }
             }
         }
         content.button(tr("Jalankan yang dipilih", "Run selected")) { runSelected(r, wfs) }
+    }
+
+    /** Kontrol satu input workflow_dispatch: centang (boolean), dropdown (choice), atau kolom teks. */
+    private fun inputControl(box: LinearLayout, w: LocalWorkflow, inp: DispatchInput) {
+        val key = w.file + "::" + inp.name
+        if (key !in inputValues) {
+            inputValues[key] = when {
+                inp.default.isNotBlank() -> inp.default
+                inp.type == "boolean" -> "false"
+                inp.type == "choice" && inp.options.isNotEmpty() -> inp.options[0]
+                else -> ""
+            }
+        }
+        val title = inp.name + (if (inp.description.isNotBlank()) "  ·  " + inp.description else "")
+        when (inp.type) {
+            "boolean" -> {
+                val cb = CheckBox(ctx)
+                cb.text = title
+                cb.textSize = 15f
+                cb.typeface = Fonts.regular(ctx)
+                cb.isChecked = inputValues[key] == "true"
+                cb.setOnCheckedChangeListener { _, on -> inputValues[key] = if (on) "true" else "false" }
+                box.addView(cb, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = box.gap(6) })
+            }
+            "choice" -> {
+                box.label(title, 14f, dim = true)
+                box.dropdown(inp.options, inp.options.indexOf(inputValues[key]).coerceAtLeast(0)) { i ->
+                    inputValues[key] = inp.options[i]
+                    refresh()
+                }
+            }
+            else -> {
+                val et = box.input(title, inputValues[key] ?: "")
+                et.onChange { inputValues[key] = it }
+            }
+        }
+    }
+
+    /** Menjalankan workflow baru lewat workflow_dispatch dengan input yang diisi, pada branch yang sedang aktif. */
+    private fun dispatchWorkflow(r: RepoEntry, w: LocalWorkflow) {
+        val inputs = LinkedHashMap<String, String>()
+        for (inp in w.inputs) {
+            val v = inputValues[w.file + "::" + inp.name] ?: inp.default
+            if (v.isNotEmpty()) inputs[inp.name] = v
+        }
+        val summary = w.name + (if (inputs.isEmpty()) "" else "\n" + inputs.entries.joinToString("\n") { it.key + " = " + it.value })
+        sure(tr("Jalankan workflow?", "Run the workflow?"), summary, tr("Jalankan", "Run")) {
+            git("Jalankan ${w.name}", {
+                val gh = ActionsApi.refFor(GitEngine.remoteUrl(r.path))
+                val branch = GitEngine.use(r.path) { it.repository.branch }
+                ActionsApi.dispatch(gh, w.file, branch, inputs)
+                RunWatcher.kick(gh)
+                OpResult(true, tr("Workflow ${w.name} dijalankan di branch $branch.", "Workflow ${w.name} started on branch $branch."))
+            }) { res -> showResult(res) }
+        }
     }
 
     private fun runSelected(r: RepoEntry, wfs: List<LocalWorkflow>) {
@@ -125,6 +188,7 @@ class RunActionsFragment : BaseFragment() {
                 lines.add("✘ " + w.name + ": " + e.friendly())
             }
         }
+        RunWatcher.kick(gh)
         return OpResult(allOk, lines.joinToString("\n"))
     }
 }

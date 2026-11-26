@@ -44,7 +44,7 @@ The interface is available in **Indonesian and English** (it follows the system 
 | **Changes** | Status, Stage selected / Stage all, Unstage, Discard selected changes, coloured diff, Commit (with a **Last message** button), **Commit & Push** (stage, commit, check the remote, push), conflict resolution (Mine / Theirs / manual Edit), Abort merge. |
 | **Branch** | Local and remote branches; create, switch, merge and delete; Stash (save, apply, pop, drop, delete all). |
 | **Sync** | Fetch, Pull (merge or rebase), safe Push (always fetches first, never forces), manage remotes. |
-| **Actions** | GitHub Actions runs of the active repo (filter by branch / tag), re-run, open and delete runs or a whole workflow, and **Run Actions** to scan `.github/workflows` and re-run ticked jobs (e.g. debug-apk, unit-tests) without a new commit. *Commit history* (log, Cherry-pick, Revert, Reset soft / mixed / HARD, Tags, copy a hash) is a button at the bottom of this tab. |
+| **Actions** | GitHub Actions runs of the active repo (filter by branch / tag), re-run, open and delete runs (also in bulk), download artifacts and logs, view logs, and **Run Actions** to scan `.github/workflows` and re-run ticked jobs (e.g. debug-apk, unit-tests) without a new commit. *Commit history* (log, Cherry-pick, Revert, Reset soft / mixed / HARD, Tags, copy a hash) is a button at the bottom of this tab. |
 
 Git commands and their buttons:
 

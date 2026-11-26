@@ -49,6 +49,27 @@ object Prefs {
             sp.edit().putInt("theme_mode", v).apply()
         }
 
+    /** Folder tujuan unduhan artefak dan log (kosong = belum diatur). */
+    var downloadDir: String
+        get() = sp.getString("download_dir", "") ?: ""
+        set(v) {
+            sp.edit().putString("download_dir", v).apply()
+        }
+
+    /** Notifikasi progres dan hasil unduhan. */
+    var downloadNotify: Boolean
+        get() = sp.getBoolean("download_notify", false)
+        set(v) {
+            sp.edit().putBoolean("download_notify", v).apply()
+        }
+
+    /** Ekstrak artefak .zip otomatis ke folder bernama artefak (zip dihapus setelahnya). */
+    var downloadExtract: Boolean
+        get() = sp.getBoolean("download_extract", false)
+        set(v) {
+            sp.edit().putBoolean("download_extract", v).apply()
+        }
+
     /** "system", "en", atau "id" */
     var lang: String
         get() = sp.getString("lang", "system") ?: "system"

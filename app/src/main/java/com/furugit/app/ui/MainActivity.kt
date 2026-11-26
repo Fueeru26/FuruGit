@@ -14,7 +14,9 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.furugit.app.R
@@ -37,6 +39,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var subTitle: TextView
     private lateinit var tabs: List<Tab>
     private var tabIndex = 0
+    private var imeVisible = false
     private lateinit var backCb: OnBackPressedCallback
 
     // kepala halaman dalam menyusut saat isi digulir ke bawah (HeaderState di FuruArc)
@@ -96,6 +99,13 @@ class MainActivity : AppCompatActivity() {
             nav.select(tabIndex, false)
         }
         updateChrome()
+        root.viewTreeObserver.addOnGlobalLayoutListener {
+            val v = ViewCompat.getRootWindowInsets(root)?.isVisible(WindowInsetsCompat.Type.ime()) == true
+            if (v != imeVisible) {
+                imeVisible = v
+                updateNav()
+            }
+        }
 
         if (savedInstanceState == null && !StorageAccess.hasAccess(this)) askStorage()
     }
@@ -197,12 +207,27 @@ class MainActivity : AppCompatActivity() {
         subHeader.visibility = if (sub) View.VISIBLE else View.GONE
         if (sub) subTitle.text = tx(supportFragmentManager.getBackStackEntryAt(n - 1).name ?: "")
         else tabTitle.text = tx(tabs[tabIndex].title)
-        nav.visibility = if (sub) View.GONE else View.VISIBLE
+        updateNav()
         backCb.isEnabled = sub
         shrinkAnim?.cancel()
         collapsed = false
         scrollAcc = 0f
         applyShrink(0f)
+    }
+
+    /** Bilah navigasi hanya tampil di halaman tab dan disembunyikan saat keyboard terbuka (agar tidak menutupi isian). */
+    private fun updateNav() {
+        nav.visibility = if (supportFragmentManager.backStackEntryCount > 0 || imeVisible) View.GONE else View.VISIBLE
+    }
+
+    override fun onResume() {
+        super.onResume()
+        com.furugit.app.data.Downloads.host = java.lang.ref.WeakReference(this)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (com.furugit.app.data.Downloads.host?.get() === this) com.furugit.app.data.Downloads.host = null
     }
 
     // ───────────── navigasi ─────────────

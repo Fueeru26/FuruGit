@@ -264,8 +264,8 @@ fun LinearLayout.rowCard(
         c.orientation = LinearLayout.VERTICAL
         row.addView(c, LinearLayout.LayoutParams(0, WRAP, 1f))
         if (titleBadge != null) {
-            titleBadge.view.textSize = 16f
-            titleBadge.view.lineH(24f)
+            titleBadge.textView.textSize = 16f
+            titleBadge.textView.lineH(24f)
             c.addView(titleBadge.view, LinearLayout.LayoutParams(MATCH, WRAP))
         } else {
             val t = TextView(context)
@@ -310,6 +310,7 @@ class DBtn(
     val label: String,
     val primary: Boolean = false,
     val keepOpen: Boolean = false,
+    val dimmed: Boolean = false,
     val onClick: (androidx.appcompat.app.AlertDialog) -> Unit = {}
 )
 
@@ -318,32 +319,39 @@ class DBtn(
  * memuat = putih (mode gelap) / hitam (mode terang), terhubung = hijau, gagal = merah.
  */
 class Badge(private val ctx: Context, private var base: String, size: Float = 14f, semibold: Boolean = false, state: Int = LOADING) {
-    val view = TextView(ctx)
+    /** Akar: titik + teks dalam satu baris. */
+    val view = LinearLayout(ctx)
+    val textView = TextView(ctx)
+    private val dot = DotView(ctx)
 
     init {
-        view.textSize = size
-        view.typeface = if (semibold) Fonts.semibold(ctx) else Fonts.bold(ctx)
-        view.setSingleLine(true)
-        view.ellipsize = TextUtils.TruncateAt.END
+        view.orientation = LinearLayout.HORIZONTAL
+        view.gravity = Gravity.CENTER_VERTICAL
+        view.clipChildren = false
+        view.addView(dot, LinearLayout.LayoutParams(ctx.dp(13), ctx.dp(13)).apply { marginEnd = ctx.dp(6) })
+        textView.textSize = size
+        textView.typeface = if (semibold) Fonts.semibold(ctx) else Fonts.bold(ctx)
+        textView.setSingleLine(true)
+        textView.ellipsize = TextUtils.TruncateAt.END
+        view.addView(textView, LinearLayout.LayoutParams(WRAP, WRAP))
         set(state)
     }
 
-    /** Mengubah keadaan; [text] opsional untuk mengganti tulisan (mis. "Aktif" jadi "Gagal"). */
+    /** Mengubah keadaan; [text] opsional untuk mengganti tulisan (mis. "Proses" jadi "Aktif" / "Gagal"). */
     fun set(state: Int, text: String = base) {
         base = text
         val pal = Pal.of(ctx)
         val col = when (state) {
             OK -> 0xFF2FBF71.toInt()
             FAIL -> 0xFFE5484D.toInt()
-            WARN -> 0xFFF2A93B.toInt()
+            WARN, RUN -> 0xFFF2C230.toInt()
             MUTED -> pal.muted
             else -> pal.text
         }
-        val label = text.replaceFirstChar { it.uppercaseChar() }
-        val sp = android.text.SpannableString("● $label")
-        sp.setSpan(android.text.style.RelativeSizeSpan(1.6f), 0, 1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        view.text = sp
-        view.setTextColor(col)
+        textView.text = text.replaceFirstChar { it.uppercaseChar() }
+        textView.setTextColor(col)
+        dot.dotColor = col
+        dot.spinning = state == RUN
     }
 
     companion object {
@@ -352,6 +360,8 @@ class Badge(private val ctx: Context, private var base: String, size: Float = 14
         const val FAIL = 2
         const val WARN = 3
         const val MUTED = 4
+        /** Kuning dengan titik berputar: proses sedang berjalan. */
+        const val RUN = 5
     }
 }
 
@@ -420,6 +430,7 @@ object Dialogs {
         buttons.forEachIndexed { i, x ->
             val btn = FuruButton(ctx, x.primary)
             btn.text = tx(x.label)
+            if (x.dimmed) btn.setDimmed(true)
             btn.setOnClickListener {
                 x.onClick(dlg)
                 if (!x.keepOpen) dlg.dismiss()
@@ -441,7 +452,7 @@ object Dialogs {
      * Jendela hasil aksi: ceklis hijau (berhasil) atau silang merah (gagal) beranimasi pelan dengan teks
      * pemberitahuan di bawahnya. Ditutup manual lewat tombol "Tutup" di bawah tengah.
      */
-    fun result(ctx: Context, ok: Boolean, message: String) {
+    fun result(ctx: Context, ok: Boolean, message: String, extra: DBtn? = null) {
         val box = LinearLayout(ctx)
         box.orientation = LinearLayout.VERTICAL
         box.gravity = Gravity.CENTER_HORIZONTAL
@@ -454,7 +465,8 @@ object Dialogs {
         tv.setTextColor(Pal.of(ctx).text)
         tv.setLineSpacing(0f, 1.2f)
         box.addView(tv, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ctx.dp(16) })
-        show(ctx, null, null, box, listOf(DBtn(tr("Tutup", "Close"), true)))
+        val btns = if (extra == null) listOf(DBtn(tr("Tutup", "Close"), true)) else listOf(DBtn(tr("Tutup", "Close")), extra)
+        show(ctx, null, null, box, btns)
     }
 
     fun confirm(ctx: Context, title: String, msg: String, okLabel: String = "Ya", onYes: () -> Unit) {
@@ -520,6 +532,58 @@ object Dialogs {
         h.addView(tv)
         show(ctx, title, null, h, listOf(DBtn(tr("Tutup", "Close"), true)))
     }
+}
+
+/**
+ * Navigasi halaman FuruArc (PageNav): tombol ‹ , teks "Halaman x / y" di tengah (ketuk untuk "Pergi ke halaman"), tombol ›.
+ * [page] dimulai dari 0.
+ */
+fun LinearLayout.pageNav(page: Int, pages: Int, onPage: (Int) -> Unit) {
+    val ctx = context
+    val pal = Pal.of(ctx)
+    val row = LinearLayout(ctx)
+    row.orientation = LinearLayout.HORIZONTAL
+    row.gravity = Gravity.CENTER_VERTICAL
+    row.clipChildren = false
+    val prev = row.button("‹", true) { onPage(page - 1) }
+    prev.isEnabled = page > 0
+    val label = TextView(ctx)
+    label.text = tr("Halaman", "Page") + " " + (page + 1) + " / " + pages
+    label.textSize = 13f
+    label.typeface = Fonts.semibold(ctx)
+    label.setTextColor(pal.text)
+    label.gravity = Gravity.CENTER
+    label.setSingleLine(true)
+    label.setPadding(0, ctx.dp(10), 0, ctx.dp(10))
+    label.isClickable = true
+    val mask = GradientDrawable()
+    mask.cornerRadius = ctx.dpf(8f)
+    mask.setColor(Color.WHITE)
+    label.background = RippleDrawable(ColorStateList.valueOf(pal.text.withAlpha(30)), null, mask)
+    label.setOnClickListener {
+        val box = vbox(ctx, 0)
+        val et = box.input("1 – $pages", (page + 1).toString())
+        et.inputType = InputType.TYPE_CLASS_NUMBER
+        et.setSelection(et.text?.length ?: 0)
+        Dialogs.show(
+            ctx, tr("Pergi ke halaman", "Go to page"), null, box,
+            listOf(
+                DBtn(tr("Batal", "Cancel")),
+                DBtn(tr("Pergi", "Go"), true, keepOpen = true) { dlg ->
+                    val n = et.text.toString().toIntOrNull()
+                    if (n != null) {
+                        dlg.dismiss()
+                        onPage((n - 1).coerceIn(0, pages - 1))
+                    }
+                }
+            )
+        )
+    }
+    row.addView(label, LinearLayout.LayoutParams(0, WRAP, 2f).apply { marginEnd = ctx.dp(8) })
+    val next = row.button("›", true) { onPage(page + 1) }
+    next.isEnabled = page < pages - 1
+    (next.layoutParams as LinearLayout.LayoutParams).marginEnd = 0
+    addView(row, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = gap(12) })
 }
 
 /**

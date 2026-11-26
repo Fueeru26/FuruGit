@@ -1,16 +1,22 @@
 package com.furugit.app.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.content.res.ColorStateList
+import android.os.Build
+import android.view.Gravity
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.widget.SwitchCompat
+import androidx.core.content.ContextCompat
+import java.io.File
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
-import android.os.Build
-import android.view.Gravity
 import android.widget.CheckBox
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -26,7 +32,6 @@ import com.furugit.app.data.Updater
 import com.furugit.app.git.friendly
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
-import java.io.File
 
 /** Link berwarna aksen dan bergaris bawah; hanya teksnya yang bisa diketuk. */
 fun LinearLayout.linkText(text: String, onClick: () -> Unit): TextView {
@@ -76,7 +81,35 @@ class SettingsHomeFragment : BaseFragment() {
 
 // ───────────────────────── Pengaturan Aplikasi ─────────────────────────
 
+/** Baris pengaturan dengan judul di kiri dan saklar di kanan. */
+private fun LinearLayout.switchRow(text: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    val pal = Pal.of(context)
+    val row = LinearLayout(context)
+    row.orientation = LinearLayout.HORIZONTAL
+    row.gravity = Gravity.CENTER_VERTICAL
+    val t = TextView(context)
+    t.text = text
+    t.textSize = 16f
+    t.typeface = Fonts.semibold(context)
+    t.setTextColor(pal.text)
+    row.addView(t, LinearLayout.LayoutParams(0, WRAP, 1f))
+    val sw = SwitchCompat(context)
+    val states = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
+    sw.thumbTintList = ColorStateList(states, intArrayOf(pal.accent, pal.muted))
+    sw.trackTintList = ColorStateList(states, intArrayOf(pal.accent.withAlpha(110), pal.disabledBg))
+    sw.isChecked = checked
+    sw.setOnCheckedChangeListener { _, on -> onChange(on) }
+    row.addView(sw, LinearLayout.LayoutParams(WRAP, WRAP))
+    addView(row, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = gap(16) })
+}
+
 class AppSettingsFragment : BaseFragment() {
+
+    private val notifPerm = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        Prefs.downloadNotify = granted
+        if (!granted) Dialogs.toast(requireContext(), tr("Izin notifikasi ditolak.", "Notification permission denied."))
+        if (isAdded && view != null) refresh()
+    }
 
     override fun refresh() {
         content.removeAllViews()
@@ -111,6 +144,31 @@ class AppSettingsFragment : BaseFragment() {
                 L.reload()
                 requireActivity().recreate()
             }
+        }
+
+        content.title(tr("Pengaturan Unduhan", "Download Settings"))
+        content.card {
+            val pal = Pal.of(context)
+            sectionLabel(tr("Folder Output", "Output Folder"))
+            label(
+                if (Prefs.downloadDir.isBlank()) tr("Belum diatur", "Not set") else Prefs.downloadDir,
+                14f, dim = Prefs.downloadDir.isBlank(), mono = Prefs.downloadDir.isNotBlank()
+            )
+            button(tr("Pilih Folder Output", "Choose Output Folder"), true) {
+                val start = if (Prefs.downloadDir.isBlank()) File("/storage/emulated/0") else File(Prefs.downloadDir)
+                FolderPicker.pick(ctx, start, "Pilih folder output", true) {
+                    Prefs.downloadDir = it.absolutePath
+                    refresh()
+                }
+            }
+            switchRow(tr("Aktifkan Notifikasi", "Enable Notifications"), Prefs.downloadNotify) { on ->
+                val needAsk = on && Build.VERSION.SDK_INT >= 33 &&
+                    ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                if (needAsk) notifPerm.launch(Manifest.permission.POST_NOTIFICATIONS) else Prefs.downloadNotify = on
+            }
+            hint(tr("Menampilkan progres dan hasil unduhan artefak / log, serta pemberitahuan saat run Aksi selesai (ketika aplikasi sedang tidak dibuka).", "Shows download progress and results, and a notice when an Actions run finishes (while the app is not open)."))
+            switchRow(tr("Ekstrak Artefak Otomatis", "Auto-extract Artifacts"), Prefs.downloadExtract) { on -> Prefs.downloadExtract = on }
+            hint(tr("Artefak .zip diekstrak ke folder bernama artefak di folder output, lalu file .zip dihapus. APK di dalamnya bisa langsung diinstal setelah unduhan selesai.", "Artifact .zip files are extracted into a folder named after the artifact in the output folder, then the .zip is deleted. APKs inside can be installed right after the download."))
         }
     }
 }

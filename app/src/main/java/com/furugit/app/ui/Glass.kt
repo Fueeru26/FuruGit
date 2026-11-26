@@ -391,6 +391,7 @@ class FuruButton(context: Context, private val primary: Boolean) : AppCompatText
     private val pal = Pal.of(context)
     private val radius = context.dpf(10f)
     private var ready = false
+    private var dimmed = false
 
     init {
         isClickable = true
@@ -418,8 +419,14 @@ class FuruButton(context: Context, private val primary: Boolean) : AppCompatText
         if (ready) applyState()
     }
 
+    /** Tampil seperti nonaktif, tetapi tetap bisa ditekan (mis. untuk menampilkan petunjuk). */
+    fun setDimmed(d: Boolean) {
+        dimmed = d
+        if (ready) applyState()
+    }
+
     private fun applyState() {
-        val kind = if (!isEnabled) 2 else if (primary) 0 else 1
+        val kind = if (!isEnabled || dimmed) 2 else if (primary) 0 else 1
         val fg = when (kind) {
             0 -> pal.onGrad
             1 -> pal.text
@@ -435,7 +442,7 @@ class FuruButton(context: Context, private val primary: Boolean) : AppCompatText
             mask
         )
         // mode terang: bayangan tipis 2dp; mode gelap: cahaya putih tipis (digambar oleh ButtonBg)
-        elevation = if (!pal.dark && isEnabled) context.dpf(2f) else 0f
+        elevation = if (!pal.dark && isEnabled && !dimmed) context.dpf(2f) else 0f
     }
 }
 
@@ -592,7 +599,7 @@ class ResultMark(context: Context, private val ok: Boolean) : View(context) {
         animate().scaleX(1f).scaleY(1f).setDuration(800L)
             .setInterpolator(android.view.animation.OvershootInterpolator(2f)).start()
         val a = ValueAnimator.ofFloat(0f, 1f)
-        a.duration = 1600L
+        a.duration = 1200L
         a.addUpdateListener {
             p = it.animatedValue as Float
             invalidate()
@@ -613,8 +620,8 @@ class ResultMark(context: Context, private val ok: Boolean) : View(context) {
         val s = min(width, height).toFloat()
         val inset = paint.strokeWidth
         rect.set(inset, inset, s - inset, s - inset)
-        canvas.drawArc(rect, -90f, 360f * min(p / 0.5f, 1f), false, paint)
-        val t = ((p - 0.5f) / 0.5f).coerceIn(0f, 1f)
+        canvas.drawArc(rect, -90f, 360f * min(p / 0.6667f, 1f), false, paint)
+        val t = ((p - 0.6667f) / 0.3333f).coerceIn(0f, 1f)
         if (t <= 0f) return
         if (ok) {
             path.reset()
@@ -631,6 +638,69 @@ class ResultMark(context: Context, private val ok: Boolean) : View(context) {
             path.moveTo(0.66f * s, 0.34f * s)
             path.lineTo(0.34f * s, 0.66f * s)
             drawPart(canvas, (t * 2f - 1f).coerceIn(0f, 1f))
+        }
+    }
+}
+
+/** Titik besar penanda status; bila [spinning] digambar sebagai cincin kuning yang berputar (proses berjalan). */
+class DotView(context: Context) : View(context) {
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val rect = RectF()
+    private var anim: android.animation.ObjectAnimator? = null
+    var dotColor: Int = Color.WHITE
+        set(v) {
+            field = v
+            invalidate()
+        }
+    var spinning: Boolean = false
+        set(v) {
+            field = v
+            if (isAttachedToWindow) updateAnim()
+            invalidate()
+        }
+
+    private fun updateAnim() {
+        if (spinning) {
+            if (anim == null) {
+                val a = android.animation.ObjectAnimator.ofFloat(this, View.ROTATION, 0f, 360f)
+                a.duration = 900L
+                a.repeatCount = ValueAnimator.INFINITE
+                a.interpolator = android.view.animation.LinearInterpolator()
+                anim = a
+                a.start()
+            }
+        } else {
+            anim?.cancel()
+            anim = null
+            rotation = 0f
+        }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        updateAnim()
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        anim?.cancel()
+        anim = null
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        val s = min(width, height).toFloat()
+        paint.color = dotColor
+        if (spinning) {
+            val sw = context.dpf(2.5f)
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = sw
+            paint.strokeCap = Paint.Cap.ROUND
+            rect.set(sw / 2f, sw / 2f, s - sw / 2f, s - sw / 2f)
+            canvas.drawArc(rect, 0f, 270f, false, paint)
+        } else {
+            paint.style = Paint.Style.FILL
+            canvas.drawCircle(s / 2f, s / 2f, s / 2f, paint)
         }
     }
 }
