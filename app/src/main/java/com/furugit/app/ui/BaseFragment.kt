@@ -25,7 +25,14 @@ abstract class BaseFragment : Fragment() {
     /** true untuk kelima halaman tab (bilah navigasi tampil, jadi isi diberi ruang di bawah). */
     protected open val tabPage: Boolean get() = false
 
+    /** false untuk layar yang operasinya tidak mengubah repo lokal (mis. Aksi GitHub), jadi tab lain tidak perlu dimuat ulang. */
+    protected open val affectsRepo: Boolean get() = true
+
+    /** true bila isi layar belum dimuat atau sudah usang; dimuat saat layar tampil. */
+    private var stale = true
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        stale = true
         val c = requireContext()
         val sv = ScrollView(c)
         sv.isFillViewport = true
@@ -47,9 +54,44 @@ abstract class BaseFragment : Fragment() {
         return sv
     }
 
+    /**
+     * Isi dimuat sekali saja: saat layar pertama dibuat (tab langsung dimuat di latar belakang sejak aplikasi dibuka),
+     * lalu hanya bila ditandai usang (setelah ada perubahan, atau internet tersambung lagi) atau diketuk ulang.
+     * Berpindah tab tidak lagi memuat ulang.
+     */
     override fun onResume() {
         super.onResume()
-        refresh()
+        if (stale && (tabPage || !isHidden)) {
+            stale = false
+            refresh()
+        }
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (!hidden && stale && isResumed) {
+            stale = false
+            refresh()
+        }
+    }
+
+    /** Menandai isi usang: layar yang sedang tampil dimuat ulang sekarang, yang tersembunyi dimuat saat ditampilkan. */
+    fun markStale() {
+        stale = true
+        if (isResumed && !isHidden && view != null) {
+            stale = false
+            refresh()
+        }
+    }
+
+    /** Memuat ulang sekarang juga, tersembunyi atau tidak (ketuk ulang tab aktif, internet tersambung lagi). */
+    fun reloadNow() {
+        if (isResumed && view != null) {
+            stale = false
+            refresh()
+        } else {
+            stale = true
+        }
     }
 
     /** Bangun ulang isi layar. Dipanggil saat layar tampil dan setelah operasi selesai. */
@@ -83,6 +125,8 @@ abstract class BaseFragment : Fragment() {
                 if (!quiet) ActivityLog.add("✔ $title")
                 if (isAdded && view != null) {
                     onDone(result)
+                    // operasi yang mengubah repo / GitHub: tab lain ditandai usang dan dimuat saat ditampilkan
+                    if (!quiet && affectsRepo) (activity as? MainActivity)?.markOthersDirty(this@BaseFragment)
                     // aksi yang mengembalikan OpResult menampilkan hasilnya lewat showResult()
                     if (!quiet && result !is OpResult) {
                         Dialogs.result(requireContext(), true, tx(title) + " " + tr("berhasil", "succeeded"))

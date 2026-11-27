@@ -28,7 +28,6 @@ jobs:
       - name: Build debug APK
         run: |
           chmod +x ./gradlew
-          export FURUARC_JAVA="$JAVA_HOME/bin/java"
           # Maven Central sometimes answers "429 Too Many Requests" to shared runners: try again a few times
           for i in 1 2 3; do ./gradlew assembleDebug --stacktrace && exit 0; echo "Attempt $i failed"; sleep 45; done
           exit 1

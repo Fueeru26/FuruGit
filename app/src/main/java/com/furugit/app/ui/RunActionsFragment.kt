@@ -19,6 +19,8 @@ import kotlinx.coroutines.CancellationException
  */
 class RunActionsFragment : BaseFragment() {
 
+    override val affectsRepo: Boolean get() = false
+
     private val selected = HashSet<String>()
     private val inputValues = HashMap<String, String>()
 

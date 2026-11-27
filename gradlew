@@ -1,6 +1,5 @@
 #!/bin/sh
-# gradlew minimal: unduh gradle-wrapper.jar jika belum ada, dan pilih JDK 8-17 (utamakan 17 karena AGP 8.x wajib JDK 17, lalu 16..9, terakhir 8).
-# Di CI, set FURUARC_JAVA="$JAVA_HOME/bin/java" supaya JDK dari setup-java yang dipakai.
+# gradlew minimal: unduh gradle-wrapper.jar jika belum ada, dan pilih JDK 8-17 (utamakan 11, lalu 17, terakhir 8).
 APP_HOME=$(cd "$(dirname "$0")" && pwd -P)
 JAR="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
 
@@ -53,7 +52,7 @@ JAVAMAJOR=""
 if [ -n "$FURUARC_JAVA" ] && [ -x "$FURUARC_JAVA" ]; then
   JAVACMD="$FURUARC_JAVA"; JAVAMAJOR=$(java_major "$FURUARC_JAVA")
 else
-  for pref in 17 16 15 14 13 12 11 10 9 8; do
+  for pref in 11 17 16 15 14 13 12 10 9 8; do
     for f in $FOUND; do
       if [ "${f%%|*}" = "$pref" ]; then JAVACMD="${f#*|}"; JAVAMAJOR="$pref"; break 2; fi
     done

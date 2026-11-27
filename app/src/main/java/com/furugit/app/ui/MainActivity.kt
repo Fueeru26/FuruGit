@@ -3,11 +3,16 @@ package com.furugit.app.ui
 import android.animation.ValueAnimator
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.net.ConnectivityManager
+import android.net.Network
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.TextUtils
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -20,6 +25,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.furugit.app.R
+import com.furugit.app.data.RepoStore
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import kotlin.math.abs
 
@@ -40,6 +46,26 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tabs: List<Tab>
     private var tabIndex = 0
     private var imeVisible = false
+    private var online = true
+    private var storageOk = false
+    private val handler = Handler(Looper.getMainLooper())
+    private val staleRunnable = Runnable { markOthersDirty(tabFragment(0)) }
+
+    /** Memantau koneksi internet: saat tersambung lagi setelah putus, semua tab dimuat ulang. */
+    private val netCb = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            runOnUiThread {
+                if (!online) {
+                    online = true
+                    reloadAll()
+                }
+            }
+        }
+
+        override fun onLost(network: Network) {
+            runOnUiThread { online = false }
+        }
+    }
     private lateinit var backCb: OnBackPressedCallback
 
     // kepala halaman dalam menyusut saat isi digulir ke bawah (HeaderState di FuruArc)
@@ -106,6 +132,19 @@ class MainActivity : AppCompatActivity() {
                 updateNav()
             }
         }
+
+        val cm = getSystemService(ConnectivityManager::class.java)
+        online = cm.activeNetwork != null
+        try {
+            cm.registerDefaultNetworkCallback(netCb)
+        } catch (e: Exception) {
+        }
+        // daftar repo / repo aktif berubah: tab selain Repo ditandai usang (ditunda sebentar agar perubahan beruntun jadi satu)
+        RepoStore.onChanged = {
+            handler.removeCallbacks(staleRunnable)
+            handler.postDelayed(staleRunnable, 150L)
+        }
+        storageOk = StorageAccess.hasAccess(this)
 
         if (savedInstanceState == null && !StorageAccess.hasAccess(this)) askStorage()
     }
@@ -223,6 +262,20 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         com.furugit.app.data.Downloads.host = java.lang.ref.WeakReference(this)
+        // izin akses file baru diberikan (dari layar pengaturan sistem): muat ulang semua tab
+        val ok = StorageAccess.hasAccess(this)
+        if (ok && !storageOk) reloadAll()
+        storageOk = ok
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            getSystemService(ConnectivityManager::class.java).unregisterNetworkCallback(netCb)
+        } catch (e: Exception) {
+        }
+        RepoStore.onChanged = null
+        handler.removeCallbacks(staleRunnable)
     }
 
     override fun onPause() {
@@ -240,23 +293,76 @@ class MainActivity : AppCompatActivity() {
         else -> ActionsFragment()
     }
 
+    private fun tabTag(i: Int) = "tab$i"
+
+    private fun tabFragment(i: Int): Fragment? = supportFragmentManager.findFragmentByTag(tabTag(i))
+
+    /** Fragmen yang sedang tampil (tab aktif atau halaman dalam teratas). */
+    private fun visibleFragment(): Fragment? =
+        supportFragmentManager.fragments.lastOrNull { it.isAdded && !it.isHidden }
+
+    /**
+     * Kelima tab dibuat sekali dan dipertahankan (hanya ditampilkan / disembunyikan), sehingga berpindah tab tidak
+     * memuat ulang. Tab dimuat saat aplikasi dibuka, lalu hanya ketika ditandai usang atau internet tersambung lagi.
+     */
     private fun selectTab(index: Int, animate: Boolean) {
         val old = tabIndex
-        if (animate && index == old && supportFragmentManager.backStackEntryCount == 0) return
+        if (animate && index == old && supportFragmentManager.backStackEntryCount == 0) {
+            // ketuk ulang tab yang sedang aktif = muat ulang
+            (tabFragment(index) as? BaseFragment)?.reloadNow()
+            return
+        }
         val swap = {
-            if (supportFragmentManager.backStackEntryCount > 0) {
-                supportFragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
-            }
+            val fm = supportFragmentManager
+            if (fm.backStackEntryCount > 0) fm.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
             tabIndex = index
-            supportFragmentManager.beginTransaction().replace(R.id.container, newTab(index)).commit()
-            if (animate) supportFragmentManager.executePendingTransactions()
+            val existing = tabFragment(index)
+            val tx = fm.beginTransaction()
+            for (i in tabs.indices) {
+                val f = tabFragment(i)
+                if (f == null) {
+                    val nf = newTab(i)
+                    tx.add(R.id.container, nf, tabTag(i))
+                    if (i != index) tx.hide(nf)
+                } else if (i == index) {
+                    tx.show(f)
+                } else {
+                    tx.hide(f)
+                }
+            }
+            tx.commit()
+            if (animate) fm.executePendingTransactions()
             nav.select(index, animate)
             updateChrome()
+            // tab yang sudah termuat: kartunya muncul bertahap lagi seperti pada pindah layar FuruArc
+            if (animate && existing != null) existing.view?.let { replayEntrance(it) }
         }
         if (animate) {
             EntranceClock.restart()
             PageTransitions.run(root, page, PageTransitions.TAB, if (index > old) 1 else -1, swap)
         } else swap()
+    }
+
+    private fun replayEntrance(v: View) {
+        if (v is GlassCard) {
+            v.replayEntrance()
+        } else if (v is ViewGroup) {
+            for (i in 0 until v.childCount) replayEntrance(v.getChildAt(i))
+        }
+    }
+
+    /** Menandai semua tab (selain [except]) usang: yang tampil dimuat ulang, yang tersembunyi dimuat saat ditampilkan. */
+    fun markOthersDirty(except: Fragment?) {
+        for (f in supportFragmentManager.fragments) {
+            if (f is BaseFragment && f !== except) f.markStale()
+        }
+    }
+
+    /** Memuat ulang semua tab sekarang juga (internet tersambung lagi, izin akses file baru diberikan). */
+    private fun reloadAll() {
+        for (f in supportFragmentManager.fragments) {
+            if (f is BaseFragment) f.reloadNow()
+        }
     }
 
     /** Pindah ke tab lain lewat kode (mis. dari kartu repo aktif ke tab Perubahan). */
@@ -265,15 +371,16 @@ class MainActivity : AppCompatActivity() {
         if (i >= 0) selectTab(i, true)
     }
 
-    /** Membuka halaman dalam (mis. Pengaturan): naik dari bawah. */
+    /** Membuka halaman dalam (mis. Pengaturan): naik dari bawah. Halaman di bawahnya hanya disembunyikan. */
     fun push(f: Fragment, title: String) {
         EntranceClock.restart()
         PageTransitions.run(root, page, PageTransitions.PUSH, 0) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.container, f)
-                .addToBackStack(title)
-                .commit()
-            supportFragmentManager.executePendingTransactions()
+            val fm = supportFragmentManager
+            val cur = visibleFragment()
+            val tx = fm.beginTransaction()
+            if (cur != null) tx.hide(cur)
+            tx.add(R.id.container, f).addToBackStack(title).commit()
+            fm.executePendingTransactions()
             updateChrome()
         }
     }
@@ -282,9 +389,13 @@ class MainActivity : AppCompatActivity() {
     private fun goBack() {
         if (supportFragmentManager.backStackEntryCount == 0) return
         EntranceClock.restart()
+        // setelah kembali dari Pengaturan dll. isi tab dimuat ulang; dari log / riwayat commit tidak perlu
+        val leaving = visibleFragment()
+        val refreshAfter = leaving !is HistoryFragment && leaving !is RunLogFragment
         PageTransitions.run(root, page, PageTransitions.POP, 0) {
             supportFragmentManager.popBackStackImmediate()
             updateChrome()
+            if (refreshAfter) markOthersDirty(null)
         }
     }
 

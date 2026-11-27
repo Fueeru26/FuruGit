@@ -1,6 +1,6 @@
 name: Release
 
-# Push a tag such as 1.00 (or 1.00-beta for a pre-release) to build a signed APK
+# Push a tag such as v1.00 (or v1.00-beta for a pre-release) to build a signed APK
 # and publish it as a GitHub release. The in-app updater downloads the first .apk
 # asset of the latest release, so this workflow attaches exactly one APK.
 #
@@ -12,14 +12,7 @@ name: Release
 
 on:
   push:
-    tags: [ '[0-9]*' ]
-  # manual run: isi input "tag" (misalnya 1.00). Boleh dijalankan dari branch main.
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag rilis, misalnya 1.00 (dibuat otomatis jika belum ada)'
-        required: true
-        default: '1.00'
+    tags: [ 'v*' ]
 
 permissions:
   contents: write
@@ -32,11 +25,8 @@ jobs:
 
       - name: Check the tag against versionName and CHANGELOG
         id: meta
-        env:
-          INPUT_TAG: ${{ inputs.tag }}
         run: |
-          TAG="${INPUT_TAG:-$GITHUB_REF_NAME}"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          TAG="${GITHUB_REF_NAME}"
           BASE="${TAG#v}"
           BASE="${BASE%%-*}"
           VER="$(grep -oP 'versionName "\K[^"]+' app/build.gradle)"
@@ -82,7 +72,6 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           chmod +x ./gradlew
-          export FURUARC_JAVA="$JAVA_HOME/bin/java"
           ./gradlew assembleRelease --stacktrace
 
       - name: Verify the signature and name the files
@@ -110,7 +99,6 @@ jobs:
       - name: Publish the release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ steps.meta.outputs.tag }}
           name: FuruGit ${{ steps.meta.outputs.version }}
           body_path: release_notes.md
           prerelease: ${{ steps.meta.outputs.prerelease == 'true' }}

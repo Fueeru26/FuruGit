@@ -211,6 +211,18 @@ class GlassCard(
         a.animateToFinalPosition(if (down) 0.92f else 1f)
     }
 
+    /** Memutar ulang animasi masuk bertahap (dipakai saat tab yang sudah termuat ditampilkan kembali). */
+    fun replayEntrance() {
+        if (nav) return
+        val slot = EntranceClock.take()
+        if (slot < 0) return
+        removeCallbacks(startEntrance)
+        entAnim?.cancel()
+        ent = 0f
+        applyTransform()
+        postDelayed(startEntrance, min(slot * 45L, 360L))
+    }
+
     /** Dipanggil [Jelly] saat daftar digulir. */
     fun setJelly(amount: Float) {
         if (amount == jelly) return

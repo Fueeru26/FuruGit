@@ -102,10 +102,14 @@ object RepoStore {
         return out
     }
 
+    /** Dipanggil setiap daftar repo atau repo aktif berubah (MainActivity memakainya untuk menandai tab usang). */
+    var onChanged: (() -> Unit)? = null
+
     private fun save(items: List<RepoEntry>) {
         val arr = JSONArray()
         for (e in items) arr.put(JSONObject().put("name", e.name).put("path", e.path))
         sp.edit().putString("repos", arr.toString()).apply()
+        onChanged?.invoke()
     }
 
     fun add(e: RepoEntry) {
@@ -122,6 +126,7 @@ object RepoStore {
         get() = sp.getString("active", null)
         set(v) {
             sp.edit().putString("active", v).apply()
+            onChanged?.invoke()
         }
 
     fun active(): RepoEntry? = list().firstOrNull { it.path == activePath }

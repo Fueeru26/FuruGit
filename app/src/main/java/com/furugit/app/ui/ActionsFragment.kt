@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
  */
 class ActionsFragment : BaseFragment() {
     override val tabPage: Boolean get() = true
+    override val affectsRepo: Boolean get() = false
 
     private var filter: String? = null
     private var filterIsTag = false
@@ -102,7 +103,7 @@ class ActionsFragment : BaseFragment() {
                     pollJob = viewLifecycleOwner.lifecycleScope.launch {
                         while (view != null) {
                             delay(8000L)
-                            if (isResumed) {
+                            if (isResumed && !isHidden) {
                                 load(r, list, true)
                                 break
                             }
