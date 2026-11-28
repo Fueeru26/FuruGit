@@ -1,6 +1,6 @@
 name: Release
 
-# Push a tag such as v1.00 (or v1.00-beta for a pre-release) to build a signed APK
+# Push a tag such as v1.01 (or v1.01-beta for a pre-release) to build a signed APK
 # and publish it as a GitHub release. The in-app updater downloads the first .apk
 # asset of the latest release, so this workflow attaches exactly one APK.
 #

@@ -1,5 +1,17 @@
 package com.furugit.app.ui
 
+import android.net.Uri
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.lifecycleScope
+import com.furugit.app.data.Backup
+import com.furugit.app.data.GitUserError
+import com.furugit.app.git.friendly
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Locale
 import android.Manifest
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
@@ -16,22 +28,16 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
-import android.net.Uri
 import android.widget.CheckBox
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.lifecycle.lifecycleScope
 import com.furugit.app.R
 import com.furugit.app.data.ActivityLog
 import com.furugit.app.data.Prefs
 import com.furugit.app.data.UpdateInfo
 import com.furugit.app.data.Updater
-import com.furugit.app.git.friendly
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.launch
 
 /** Link berwarna aksen dan bergaris bawah; hanya teksnya yang bisa diketuk. */
 fun LinearLayout.linkText(text: String, onClick: () -> Unit): TextView {
@@ -105,6 +111,125 @@ private fun LinearLayout.switchRow(text: String, checked: Boolean, onChange: (Bo
 
 class AppSettingsFragment : BaseFragment() {
 
+    private var pendingPassword = ""
+
+    private val createDoc = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
+        if (uri != null) doExport(uri)
+    }
+
+    private val openDoc = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) askImportPassword(uri)
+    }
+
+    /** Ekspor: minta sandi (file berisi token GitHub), lalu pilih lokasi simpan lewat pemilih berkas sistem. */
+    private fun startExport() {
+        val box = vbox(ctx, 0)
+        box.hint(tr("File cadangan berisi token GitHub, jadi dilindungi sandi. Ingat sandinya: tanpa sandi file tidak bisa dibuka.", "The backup contains your GitHub tokens, so it is protected by a password. Remember it: the file cannot be opened without it."))
+        val p1 = box.input(tr("Sandi", "Password"), password = true)
+        val p2 = box.input(tr("Ulangi sandi", "Repeat password"), password = true)
+        Dialogs.show(
+            ctx, tr("Ekspor Data Aplikasi", "Export App Data"), null, box,
+            listOf(
+                DBtn(tr("Batal", "Cancel")),
+                DBtn(tr("Lanjut", "Next"), true, keepOpen = true) { dlg ->
+                    val a = p1.text.toString()
+                    val b = p2.text.toString()
+                    if (a.length < 4) {
+                        Dialogs.toast(ctx, tr("Sandi minimal 4 karakter.", "The password needs at least 4 characters."))
+                    } else if (a != b) {
+                        Dialogs.toast(ctx, tr("Kedua sandi tidak sama.", "The passwords do not match."))
+                    } else {
+                        pendingPassword = a
+                        dlg.dismiss()
+                        createDoc.launch("FuruGit-Backup-" + SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(java.util.Date()) + ".fgb")
+                    }
+                }
+            )
+        )
+    }
+
+    private fun doExport(uri: Uri) {
+        val c = ctx
+        val password = pendingPassword
+        pendingPassword = ""
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    val bytes = Backup.encrypt(Backup.build().toByteArray(), password.toCharArray())
+                    val out = c.contentResolver.openOutputStream(uri, "wt") ?: throw GitUserError("File tujuan tidak bisa ditulis.")
+                    out.use { it.write(bytes) }
+                }
+                Dialogs.result(c, true, tr("Data aplikasi berhasil diekspor. Simpan file dan sandinya di tempat aman.", "App data exported. Keep the file and its password somewhere safe."))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                Dialogs.result(c, false, e.friendly())
+            }
+        }
+    }
+
+    private fun startImport() {
+        Dialogs.confirm(
+            ctx, tr("Impor Data Aplikasi?", "Import App Data?"),
+            tr("Pengaturan, daftar repository, dan akun GitHub saat ini akan DIGANTI dengan isi file cadangan.", "Your current settings, repository list and GitHub accounts will be REPLACED by the backup file."),
+            tr("Pilih File", "Choose File")
+        ) { openDoc.launch(arrayOf("*/*")) }
+    }
+
+    private fun askImportPassword(uri: Uri) {
+        val box = vbox(ctx, 0)
+        val pw = box.input(tr("Sandi", "Password"), password = true)
+        Dialogs.show(
+            ctx, tr("Sandi Cadangan", "Backup Password"), null, box,
+            listOf(
+                DBtn(tr("Batal", "Cancel")),
+                DBtn(tr("Impor", "Import"), true, keepOpen = true) { dlg ->
+                    val s = pw.text.toString()
+                    if (s.isNotEmpty()) {
+                        dlg.dismiss()
+                        doImport(uri, s)
+                    }
+                }
+            )
+        )
+    }
+
+    private fun doImport(uri: Uri, password: String) {
+        val c = ctx
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    val bytes = c.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: throw GitUserError("File tidak bisa dibaca.")
+                    Backup.apply(String(Backup.decrypt(bytes, password.toCharArray())))
+                }
+                L.reload()
+                AppCompatDelegate.setDefaultNightMode(
+                    when (Prefs.themeMode) {
+                        1 -> AppCompatDelegate.MODE_NIGHT_NO
+                        2 -> AppCompatDelegate.MODE_NIGHT_YES
+                        else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                    }
+                )
+                val box = LinearLayout(c)
+                box.orientation = LinearLayout.VERTICAL
+                box.gravity = Gravity.CENTER_HORIZONTAL
+                box.addView(ResultMark(c, true), LinearLayout.LayoutParams(c.dp(88), c.dp(88)))
+                val tv = TextView(c)
+                tv.text = tr("Data aplikasi berhasil diimpor. Aplikasi dimuat ulang untuk menerapkan pengaturan.", "App data imported. The app reloads to apply the settings.")
+                tv.textSize = 16f
+                tv.typeface = Fonts.semibold(c)
+                tv.gravity = Gravity.CENTER
+                tv.setTextColor(Pal.of(c).text)
+                box.addView(tv, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = c.dp(16) })
+                Dialogs.show(c, null, null, box, listOf(DBtn(tr("Tutup", "Close"), true) { activity?.recreate() }), cancelable = false)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                Dialogs.result(c, false, e.friendly())
+            }
+        }
+    }
+
     private val notifPerm = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         Prefs.downloadNotify = granted
         if (!granted) Dialogs.toast(requireContext(), tr("Izin notifikasi ditolak.", "Notification permission denied."))
@@ -169,6 +294,13 @@ class AppSettingsFragment : BaseFragment() {
             hint(tr("Menampilkan progres dan hasil unduhan artefak / log, serta pemberitahuan saat run Aksi selesai (ketika aplikasi sedang tidak dibuka).", "Shows download progress and results, and a notice when an Actions run finishes (while the app is not open)."))
             switchRow(tr("Ekstrak Artefak Otomatis", "Auto-extract Artifacts"), Prefs.downloadExtract) { on -> Prefs.downloadExtract = on }
             hint(tr("Artefak .zip diekstrak ke folder bernama artefak di folder output, lalu file .zip dihapus. APK di dalamnya bisa langsung diinstal setelah unduhan selesai.", "Artifact .zip files are extracted into a folder named after the artifact in the output folder, then the .zip is deleted. APKs inside can be installed right after the download."))
+        }
+
+        content.title(tr("Pengaturan Data", "Data Settings"))
+        content.card {
+            hint(tr("Cadangkan pengaturan, daftar repository, folder output, dan akun GitHub ke satu file (dilindungi sandi). Setelah aplikasi dihapus dan dipasang ulang, cukup impor file itu.", "Back up your settings, repository list, output folder and GitHub accounts into one file (password protected). After uninstalling and reinstalling the app, just import that file."))
+            button(tr("Ekspor Data Aplikasi", "Export App Data")) { startExport() }
+            button(tr("Impor Data Aplikasi", "Import App Data"), true) { startImport() }
         }
     }
 }
