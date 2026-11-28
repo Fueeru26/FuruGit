@@ -1,6 +1,6 @@
 name: Release
 
-# Push a tag such as v1.01 (or v1.01-beta for a pre-release) to build a signed APK
+# Push a tag such as 1.01 or v1.01 (or 1.01-beta for a pre-release) to build a signed APK
 # and publish it as a GitHub release. The in-app updater downloads the first .apk
 # asset of the latest release, so this workflow attaches exactly one APK.
 #
@@ -12,7 +12,7 @@ name: Release
 
 on:
   push:
-    tags: [ '[0-9]*' ]
+    tags: [ '[0-9]*', 'v[0-9]*' ]
   # manual run: fill in the "tag" input (for example 1.07). It can be run from the main branch.
   workflow_dispatch:
     inputs:
@@ -32,8 +32,20 @@ jobs:
 
       - name: Check the tag against versionName and CHANGELOG
         id: meta
+        env:
+          # On a tag push the tag is the ref name. On a manual run GITHUB_REF_NAME is the
+          # branch (for example "main"), so the tag comes from the "tag" input instead.
+          INPUT_TAG: ${{ github.event.inputs.tag }}
         run: |
-          TAG="${GITHUB_REF_NAME}"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            TAG="${INPUT_TAG}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          if [ -z "$TAG" ]; then
+            echo "::error::No tag given"
+            exit 1
+          fi
           BASE="${TAG#v}"
           BASE="${BASE%%-*}"
           VER="$(grep -oP 'versionName "\K[^"]+' app/build.gradle)"
@@ -48,6 +60,7 @@ jobs:
           fi
           if [[ "$TAG" == *-* ]]; then echo "prerelease=true" >> "$GITHUB_OUTPUT"; else echo "prerelease=false" >> "$GITHUB_OUTPUT"; fi
           echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       # AGP 8.2 needs JDK 17. The runner image already ships the Android SDK (see build.yml).
       - uses: actions/setup-java@v6
@@ -106,6 +119,9 @@ jobs:
       - name: Publish the release
         uses: softprops/action-gh-release@v3
         with:
+          # Creates the tag on this commit when it does not exist yet (manual run).
+          tag_name: ${{ steps.meta.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           name: FuruGit ${{ steps.meta.outputs.version }}
           body_path: release_notes.md
           prerelease: ${{ steps.meta.outputs.prerelease == 'true' }}
