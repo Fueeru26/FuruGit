@@ -44,7 +44,39 @@ The interface is available in **Indonesian and English** (it follows the system 
 | **Changes** | Status, Stage selected / Stage all, Unstage, Discard selected changes, coloured diff, Commit (with a **Last message** button), **Commit & Push** (stage, commit, check the remote, push), conflict resolution (Mine / Theirs / manual Edit), Abort merge. |
 | **Branch** | Local and remote branches; create, switch, merge and delete; Stash (save, apply, pop, drop, delete all). |
 | **Sync** | Fetch, Pull (merge or rebase), safe Push (always fetches first, never forces), manage remotes. |
-| **Actions** | GitHub Actions runs of the active repo (filter by branch / tag), re-run, open and delete runs (also in bulk), download artifacts and logs, view logs, and **Run Actions** to scan `.github/workflows` and re-run ticked jobs (e.g. debug-apk, unit-tests) without a new commit. *Commit history* (log, Cherry-pick, Revert, Reset soft / mixed / HARD, Tags, copy a hash) is a button at the bottom of this tab. |
+| **Actions** | GitHub Actions runs of the active repo (filter by branch / tag), re-run, open and delete runs (also in bulk), download artifacts and logs, view logs, install an APK from an artifact, and **Run Actions** to scan `.github/workflows` and re-run ticked jobs (e.g. debug-apk, unit-tests) without a new commit. *Commit history* (log, Cherry-pick, Revert, Reset soft / mixed / HARD, Tags, copy a hash) is a button at the bottom of this tab. |
+
+### Manage runs
+
+The **Actions** tab is a small GitHub Actions console. It reads the runs of the active repository live from GitHub, so a run or workflow you delete on GitHub also disappears from the list. Everything below works on your phone, without a new commit or push.
+
+- **Run workflows**: the *Run Actions* page scans `.github/workflows`, lists every workflow and job with a checkbox, and re-runs the ticked jobs from the latest run. If the workflow has `workflow_dispatch`, you can also start a brand new run and fill in its inputs (checkbox, dropdown or text field) on the branch that is currently active.
+- **Re-run**: re-run a whole finished run, or only one job of it.
+- **Cancel a run**: stop a run that is queued or in progress. The run menu only offers what applies: running runs get *Cancel*, finished runs get *Re-run* and *Delete*.
+- **Watch progress**: runs in progress show a "Running" badge, the list refreshes by itself every 8 seconds, and a toast tells you when a run finishes. Filter the list by **branch**, **tag** or **status** (running, success, failed, cancelled).
+- **View run logs**: every job is a collapsible card showing the whole log, 50 lines per page with page navigation. Errors are red, warnings yellow and step titles bold, and the ANSI colour codes are removed. You can **search** across all jobs (next / previous match jumps to the right job and page and highlights the line), jump to the **first error**, **copy** a page, or **share** a job's log as a text file.
+- **Download run logs**: save the log of each job as a `.log` file in your output folder (tick the jobs you want).
+- **Download artifacts**: tick the artifacts of a run and download them with a progress window. *Run in Background* closes the window while the download continues, and a notification shows the progress and the result.
+- **Auto-extract**: with *Auto-extract Artifacts* on, each artifact `.zip` is extracted into a folder named after the artifact and the `.zip` is removed.
+- **Install an APK straight from an artifact**: when a downloaded artifact contains an APK, an **Install APK** button opens the system installer right away (if the artifact has several APKs you pick one). It works with the extracted folder and with the original `.zip`.
+- **Delete runs**: delete one run, or **Bulk delete** failed runs, runs older than 7 or 30 days, or all finished runs. FuruGit shows how many runs match and asks for confirmation first.
+- **Open on GitHub**: open the run page in the browser.
+- **Notifications**: with *Enable Notifications* on, a notification tells you when a run finishes, even after you leave the Actions tab (it checks every 15 seconds while a run is active, and stops if Android kills the app).
+- **Commit history** is a button at the bottom of the tab.
+
+Download settings are in **Settings > App Settings > Download Settings**: the output folder (required before the first download), *Enable Notifications* and *Auto-extract Artifacts*.
+
+### More features
+
+- **Commit & Push in one button**: stages, commits, checks the remote and pushes. Commit also has a **Last message** button.
+- **Conflict resolution**: choose Mine, Theirs or edit by hand, or abort the merge.
+- **Account per Git host**: sign in with a Personal Access Token or OAuth Device Flow (one account per host, such as github.com); tokens are stored encrypted with the Android Keystore.
+- **Works on real folders**: repositories are opened by their real path (no copy), so other apps such as editors and AndroidIDE see the same files.
+- **Built-in updater** (same as FuruArc): the app checks this repository's releases when it opens; a new version brings up an update window with the notes, an in-app APK download window and *Install app*. A red dot on the gear icon and on the *Check for Updates* tile marks a new version.
+- **Export / Import App Data**: save settings, repository list and GitHub accounts into one password-protected file (AES-256-GCM) and restore it after reinstalling the app (*App Settings > Data Settings*).
+- **Activity Log and problem reports**: every operation is logged, and you can send a problem report by email with the latest log attached.
+- **Crash screen**: if the app crashes, the error is saved and shown on screen so you can copy and report it.
+- **Light and dark themes, Indonesian and English**, with the Blue Blossom look: glass cards, springy press effect, staggered card entrance and screen transitions.
 
 Git commands and their buttons:
 
@@ -60,7 +92,7 @@ Git commands and their buttons:
 | `git fetch` / `pull` / `push` / `remote` | Sync tab |
 | `git log` / `reset` / `revert` / `cherry-pick` / `tag` | Actions tab › Commit history |
 
-**Confirmation before every action.** Buttons that execute something (stage, commit, commit & push, fetch, pull, push, switch branch, stash apply / pop, reset, push or delete a tag, resolve a conflict, init, save identity, GitHub login, install an update) open a confirmation window first.
+**Confirmation before every action.** Buttons that execute something (stage, commit, commit & push, fetch, pull, push, switch branch, stash apply / pop, reset, push or delete a tag, resolve a conflict, init, save identity, GitHub login) open a confirmation window first.
 
 **Safe by design.** Push always fetches first and refuses when the remote is newer; there is no force push. On shared storage `core.filemode` and `core.symlinks` are turned off automatically so files do not all look modified.
 
@@ -72,7 +104,7 @@ Tap the gear icon in the top bar.
 - **App Settings**: theme mode (Follow System, Light, Dark) and language (Follow System, English, Indonesian). *Follow System* uses Indonesian when the device language is Indonesian, otherwise English.
 - **Activity Log**: the operations that were run; copy or clear them.
 - **Guide**: what Git is, its commands, how the app works, resolving conflicts and troubleshooting.
-- **Check for Updates**: looks for a newer release of this repository, shows the notes, downloads the APK and opens the system installer.
+- **Check for Updates**: shows the result of a fresh check, the release notes, downloads the APK in its own window and opens the system installer.
 - **About**: developer, contact, donation, report a problem by email, and About the App.
 
 ## Signing in to GitHub

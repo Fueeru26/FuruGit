@@ -295,6 +295,74 @@ fun LinearLayout.rowCard(
     return col!!
 }
 
+/** Satu kotak menu pada grid. [dot] diisi [tileGrid]: titik merah di pojok kanan atas ikon (disembunyikan sampai dibutuhkan). */
+class MenuTile(val icon: Int, val label: String, val onClick: () -> Unit) {
+    var dot: View? = null
+}
+
+/**
+ * Grid kotak menu: [columns] kotak per baris, tiap kotak kartu kaca dengan kotak ikon bergradien di atas
+ * dan label tanpa keterangan di bawahnya (maksimal 2 baris, rata atas, tinggi semua kotak sama).
+ */
+fun LinearLayout.tileGrid(tiles: List<MenuTile>, columns: Int = 3) {
+    val ctx = context
+    val pal = Pal.of(ctx)
+    var row: LinearLayout? = null
+    tiles.forEachIndexed { i, t ->
+        if (i % columns == 0) {
+            val r = LinearLayout(ctx)
+            r.orientation = LinearLayout.HORIZONTAL
+            r.clipChildren = false
+            r.clipToPadding = false
+            addView(r, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = gap(18) })
+            row = r
+        }
+        val card = GlassCard(ctx, true)
+        val inner = LinearLayout(ctx)
+        inner.orientation = LinearLayout.VERTICAL
+        inner.gravity = Gravity.CENTER_HORIZONTAL
+        inner.clipChildren = false
+        inner.setPadding(ctx.dp(6), ctx.dp(16), ctx.dp(6), ctx.dp(14))
+
+        val box = FrameLayout(ctx)
+        val bg = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(pal.gradA, pal.gradB))
+        bg.cornerRadius = ctx.dpf(12f)
+        box.background = bg
+        val iv = ImageView(ctx)
+        iv.setImageResource(t.icon)
+        iv.imageTintList = ColorStateList.valueOf(pal.onGrad)
+        box.addView(iv, FrameLayout.LayoutParams(ctx.dp(28), ctx.dp(28), Gravity.CENTER))
+        val dot = ctx.redDot(10)
+        (dot.layoutParams as FrameLayout.LayoutParams).apply {
+            gravity = Gravity.TOP or Gravity.END
+            topMargin = ctx.dp(4)
+            marginEnd = ctx.dp(4)
+        }
+        dot.visibility = View.GONE
+        box.addView(dot)
+        t.dot = dot
+        inner.addView(box, LinearLayout.LayoutParams(ctx.dp(52), ctx.dp(52)))
+
+        val label = TextView(ctx)
+        label.text = tx(t.label)
+        label.textSize = 13f
+        label.typeface = Fonts.semibold(ctx)
+        label.setTextColor(pal.text)
+        label.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+        label.setLineSpacing(0f, 1.1f)
+        label.minLines = 2
+        label.maxLines = 2
+        label.ellipsize = TextUtils.TruncateAt.END
+        inner.addView(label, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ctx.dp(12) })
+
+        card.addView(inner, FrameLayout.LayoutParams(MATCH, MATCH))
+        card.makeClickable(t.onClick)
+        row!!.addView(card, LinearLayout.LayoutParams(0, MATCH, 1f).apply {
+            if (i % columns != 0) marginStart = ctx.dp(14)
+        })
+    }
+}
+
 fun EditText.onChange(block: (String) -> Unit) {
     addTextChangedListener(object : TextWatcher {
         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}

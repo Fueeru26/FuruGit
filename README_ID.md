@@ -44,7 +44,39 @@ Antarmuka tersedia dalam **bahasa Indonesia dan Inggris** (mengikuti bahasa sist
 | **Perubahan** | Status, Stage terpilih / Stage semua, Unstage, Buang perubahan terpilih, diff berwarna, Commit (dengan tombol **Pesan terakhir**), **Commit & Push** (stage, commit, cek remote, push), penyelesaian konflik (Milik saya / Milik remote / Edit manual), Batalkan merge. |
 | **Branch** | Branch lokal dan remote; buat, pindah, merge, dan hapus; Stash (simpan, apply, pop, drop, hapus semua). |
 | **Sync** | Fetch, Pull (merge atau rebase), Push aman (selalu fetch dulu, tidak pernah memaksa), kelola remote. |
-| **Aksi** | Run GitHub Actions repo aktif (filter branch / tag), jalankan ulang, buka, hapus run (juga massal), unduh artefak dan log, lihat log, dan **Jalankan Aksi** untuk memindai `.github/workflows` lalu menjalankan ulang job yang dicentang (mis. debug-apk, unit-tests) tanpa commit baru. *Riwayat commit* (log, Cherry-pick, Revert, Reset soft / mixed / HARD, Tag, salin hash) ada sebagai tombol di bawah tab ini. |
+| **Aksi** | Run GitHub Actions repo aktif (filter branch / tag), jalankan ulang, buka, hapus run (juga massal), unduh artefak dan log, lihat log, instal APK dari artefak, dan **Jalankan Aksi** untuk memindai `.github/workflows` lalu menjalankan ulang job yang dicentang (mis. debug-apk, unit-tests) tanpa commit baru. *Riwayat commit* (log, Cherry-pick, Revert, Reset soft / mixed / HARD, Tag, salin hash) ada sebagai tombol di bawah tab ini. |
+
+### Kelola run
+
+Tab **Aksi** adalah konsol GitHub Actions mini. Daftar run repository aktif dibaca langsung dari GitHub, jadi run atau workflow yang kamu hapus di GitHub ikut hilang dari daftar. Semua fitur di bawah jalan dari HP, tanpa commit atau push baru.
+
+- **Jalankan workflow**: halaman *Jalankan Aksi* memindai `.github/workflows`, menampilkan setiap workflow dan job dengan kotak centang, lalu menjalankan ulang job yang dicentang dari run terakhir. Bila workflow punya `workflow_dispatch`, kamu juga bisa memulai run baru dan mengisi input-nya (centang, dropdown, atau kolom teks) pada branch yang sedang aktif.
+- **Mulai ulang run**: jalankan ulang seluruh run yang sudah selesai, atau hanya satu job di dalamnya.
+- **Hentikan run**: batalkan run yang antre atau sedang berjalan. Menu run hanya menampilkan yang sesuai: run yang berjalan mendapat *Batalkan run*, run yang selesai mendapat *Jalankan ulang* dan *Hapus*.
+- **Pantau progres**: run yang berjalan diberi lencana "Berjalan", daftar menyegarkan diri tiap 8 detik, dan toast memberi tahu saat run selesai. Daftar bisa difilter menurut **branch**, **tag**, atau **status** (berjalan, berhasil, gagal, dibatalkan).
+- **Lihat log run**: setiap job berupa kartu yang bisa dibuka / ditutup berisi log lengkap, 50 baris per halaman dengan navigasi halaman. Error berwarna merah, warning kuning, judul langkah tebal, dan kode warna ANSI dihapus. Kamu bisa **mencari** di semua job (cocok berikutnya / sebelumnya langsung menuju job dan halaman yang tepat dan menyorot barisnya), lompat ke **error pertama**, **menyalin** satu halaman, atau **membagikan** log job sebagai file teks.
+- **Unduh log run**: simpan log tiap job sebagai file `.log` di folder output (centang job yang diinginkan).
+- **Unduh artefak**: centang artefak sebuah run lalu unduh dengan jendela progres. *Proses di Latar Belakang* menutup jendela sementara unduhan tetap jalan, dan notifikasi menampilkan progres serta hasilnya.
+- **Ekstrak otomatis**: bila *Ekstrak Artefak Otomatis* menyala, setiap artefak `.zip` diekstrak ke folder bernama artefak dan file `.zip` dihapus.
+- **Instal APK langsung dari artefak**: bila artefak yang diunduh berisi APK, tombol **Instal APK** langsung membuka installer sistem (bila ada beberapa APK, kamu memilih salah satu). Bisa dari folder hasil ekstrak maupun dari `.zip` aslinya.
+- **Hapus run**: hapus satu run, atau **Hapus massal** run gagal, run lebih lama dari 7 atau 30 hari, atau semua run yang sudah selesai. FuruGit menampilkan jumlah yang cocok dan meminta konfirmasi lebih dulu.
+- **Buka di GitHub**: buka halaman run di browser.
+- **Notifikasi**: bila *Aktifkan Notifikasi* menyala, notifikasi memberi tahu saat run selesai, bahkan setelah kamu keluar dari tab Aksi (diperiksa tiap 15 detik selama ada run aktif, dan berhenti bila Android mematikan aplikasi).
+- **Riwayat commit** ada sebagai tombol di bagian bawah tab.
+
+Pengaturan unduhan ada di **Pengaturan > Pengaturan Aplikasi > Pengaturan Unduhan**: folder output (wajib diatur sebelum unduhan pertama), *Aktifkan Notifikasi*, dan *Ekstrak Artefak Otomatis*.
+
+### Fitur lainnya
+
+- **Commit & Push satu tombol**: stage, commit, cek remote, lalu push. Commit juga punya tombol **Pesan terakhir**.
+- **Penyelesaian konflik**: pilih Milik saya, Milik remote, atau edit manual, atau batalkan merge.
+- **Akun per host Git**: masuk dengan Personal Access Token atau OAuth Device Flow (satu akun per host, mis. github.com); token disimpan terenkripsi dengan Android Keystore.
+- **Bekerja di folder asli**: repository dibuka lewat path aslinya (tanpa salinan), jadi aplikasi lain seperti editor dan AndroidIDE melihat file yang sama.
+- **Pembaruan bawaan** (sama seperti FuruArc): aplikasi memeriksa rilis repository ini saat dibuka; versi baru memunculkan jendela pembaruan berisi catatan rilis, jendela unduh APK di dalam aplikasi, dan *Install aplikasi*. Titik merah di ikon gear dan di kotak *Periksa Pembaruan* menandai adanya versi baru.
+- **Ekspor / Impor Data Aplikasi**: simpan pengaturan, daftar repository, dan akun GitHub ke satu file berpassword (AES-256-GCM) lalu pulihkan setelah aplikasi dipasang ulang (*Pengaturan Aplikasi > Pengaturan Data*).
+- **Log Aktivitas dan laporan masalah**: setiap operasi dicatat, dan kamu bisa mengirim laporan masalah lewat email beserta log terakhir.
+- **Layar crash**: bila aplikasi crash, error disimpan dan ditampilkan di layar supaya bisa disalin dan dilaporkan.
+- **Tema terang dan gelap, bahasa Indonesia dan Inggris**, dengan tampilan Blue Blossom: kartu kaca, efek tekan berpegas, kartu muncul bertahap, dan transisi layar.
 
 Perintah Git dan tombolnya:
 
@@ -60,7 +92,7 @@ Perintah Git dan tombolnya:
 | `git fetch` / `pull` / `push` / `remote` | Tab Sync |
 | `git log` / `reset` / `revert` / `cherry-pick` / `tag` | Tab Aksi › Riwayat commit |
 
-**Konfirmasi sebelum setiap aksi.** Tombol yang mengeksekusi sesuatu (stage, commit, commit & push, fetch, pull, push, pindah branch, apply / pop stash, reset, push atau hapus tag, selesaikan konflik, init, simpan identitas, login GitHub, pasang pembaruan) membuka jendela konfirmasi lebih dulu.
+**Konfirmasi sebelum setiap aksi.** Tombol yang mengeksekusi sesuatu (stage, commit, commit & push, fetch, pull, push, pindah branch, apply / pop stash, reset, push atau hapus tag, selesaikan konflik, init, simpan identitas, login GitHub) membuka jendela konfirmasi lebih dulu.
 
 **Aman sejak rancangan.** Push selalu fetch dulu dan menolak bila remote lebih baru; tidak ada push paksa. Di penyimpanan bersama, `core.filemode` dan `core.symlinks` dimatikan otomatis agar file tidak terlihat berubah semuanya.
 
@@ -72,7 +104,7 @@ Ketuk ikon gear di bilah atas.
 - **Pengaturan Aplikasi**: mode tema (Ikuti Sistem, Terang, Gelap) dan bahasa (Ikuti Sistem, Inggris, Indonesia). *Ikuti Sistem* memakai bahasa Indonesia bila bahasa perangkat Indonesia, selain itu Inggris.
 - **Log Aktivitas**: operasi yang pernah dijalankan; bisa disalin atau dibersihkan.
 - **Panduan**: apa itu Git, perintahnya, cara kerja aplikasi, menyelesaikan konflik, dan pemecahan masalah.
-- **Periksa Pembaruan**: mencari rilis yang lebih baru di repo ini, menampilkan catatannya, mengunduh APK, dan membuka installer sistem.
+- **Periksa Pembaruan**: menampilkan hasil pemeriksaan terbaru, catatan rilis, mengunduh APK di jendela tersendiri, dan membuka installer sistem.
 - **Tentang**: pengembang, kontak, donasi, lapor masalah lewat email, dan Tentang Aplikasi.
 
 ## Masuk ke GitHub

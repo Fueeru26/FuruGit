@@ -26,6 +26,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.furugit.app.R
 import com.furugit.app.data.RepoStore
+import com.furugit.app.data.UpdateChecker
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import kotlin.math.abs
 
@@ -67,6 +68,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
     private lateinit var backCb: OnBackPressedCallback
+
+    // pembaruan versi (seperti FuruArc): titik merah di ikon gear + jendela pengumuman sekali per versi
+    private lateinit var gearDot: View
+    private var announceDlg: androidx.appcompat.app.AlertDialog? = null
+    private var destroying = false
+    private val upListener: () -> Unit = {
+        gearDot.visibility = if (UpdateChecker.available) View.VISIBLE else View.GONE
+        maybeAnnounce()
+    }
 
     // kepala halaman dalam menyusut saat isi digulir ke bawah (HeaderState di FuruArc)
     private var collapsed = false
@@ -146,6 +156,9 @@ class MainActivity : AppCompatActivity() {
         }
         storageOk = StorageAccess.hasAccess(this)
 
+        // cek pembaruan senyap saat aplikasi dibuka (paling sering tiap 6 jam)
+        UpdateChecker.autoCheck(this)
+
         if (savedInstanceState == null && !StorageAccess.hasAccess(this)) askStorage()
     }
 
@@ -176,14 +189,26 @@ class MainActivity : AppCompatActivity() {
         gear.setImageResource(R.drawable.ic_settings)
         gear.imageTintList = ColorStateList.valueOf(pal.text)
         gear.scaleType = ImageView.ScaleType.CENTER
-        gear.contentDescription = tx("Pengaturan")
-        gear.isClickable = true
-        gear.setOnClickListener {
+        val gearBox = FrameLayout(this)
+        gearBox.clipChildren = false
+        gearBox.contentDescription = tx("Pengaturan")
+        gearBox.isClickable = true
+        gearBox.setOnClickListener {
             if (supportFragmentManager.backStackEntryCount == 0) push(SettingsHomeFragment(), "Pengaturan")
         }
-        gear.pressScale(0.9f)
+        gearBox.pressScale(0.9f)
+        gearBox.addView(gear, FrameLayout.LayoutParams(MATCH, MATCH))
+        // titik merah di pojok kanan atas ikon gear bila ada versi baru
+        gearDot = redDot(9)
+        (gearDot.layoutParams as FrameLayout.LayoutParams).apply {
+            gravity = Gravity.TOP or Gravity.END
+            topMargin = dp(10)
+            marginEnd = dp(8)
+        }
+        gearDot.visibility = View.GONE
+        gearBox.addView(gearDot)
         // area sentuh 48dp, tetapi ikon 24dp sejajar dengan tepi isi
-        tabHeader.addView(gear, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = -dp(12) })
+        tabHeader.addView(gearBox, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = -dp(12) })
         header.addView(tabHeader, FrameLayout.LayoutParams(MATCH, MATCH))
 
         // judul halaman dalam: tombol kembali + judul 22sp semi-tebal (ScreenHeader)
@@ -259,6 +284,27 @@ class MainActivity : AppCompatActivity() {
         nav.visibility = if (supportFragmentManager.backStackEntryCount > 0 || imeVisible) View.GONE else View.VISIBLE
     }
 
+    override fun onStart() {
+        super.onStart()
+        UpdateChecker.addListener(upListener)
+        upListener()
+    }
+
+    override fun onStop() {
+        UpdateChecker.removeListener(upListener)
+        super.onStop()
+    }
+
+    /** Versi baru ditemukan oleh pemeriksaan otomatis: jendela pembaruan langsung muncul (sekali per versi). */
+    private fun maybeAnnounce() {
+        val info = UpdateChecker.announce ?: return
+        if (announceDlg != null || isFinishing || isDestroyed) return
+        announceDlg = UpdateDialogs.showAnnounce(this, info, onDownload = { UpdateDialogs.showCheck(this) }) {
+            announceDlg = null
+            if (!destroying) UpdateChecker.announce = null
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         com.furugit.app.data.Downloads.host = java.lang.ref.WeakReference(this)
@@ -269,6 +315,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        destroying = true
+        try {
+            announceDlg?.dismiss()
+        } catch (e: Exception) {
+        }
         super.onDestroy()
         try {
             getSystemService(ConnectivityManager::class.java).unregisterNetworkCallback(netCb)

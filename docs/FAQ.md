@@ -52,4 +52,4 @@ Changes tab > Conflicts: choose Mine, Theirs, or Edit for each file, then Commit
 ## Updates
 
 **How do updates work?**
-Settings > Check for Updates reads the releases of `Fueeru26/FuruGit`. If a newer version exists you can download the APK and open the system installer. Android asks you to allow installs from FuruGit the first time.
+FuruGit checks the releases of `Fueeru26/FuruGit` when it opens (silently, at most every 6 hours). If a newer version exists, an update window appears with the release notes and a red dot marks the gear icon and Settings > Check for Updates. You can download the APK in its own window and then open the system installer. Android asks you to allow installs from FuruGit the first time.

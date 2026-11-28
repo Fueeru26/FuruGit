@@ -11,13 +11,13 @@ All notable changes to FuruGit are listed here. The version number is only raise
   - **Branch tab**: local and remote branches, create, switch, merge, delete; Stash (save, apply, pop, drop, delete all).
   - **Sync tab**: Fetch, Pull (merge or rebase), safe Push (always fetches first, never forces), manage remotes.
   - **Actions tab** (was History): GitHub Actions runs (live from GitHub, so deleted runs / workflows disappear), re-run, open, delete a run, and a **Run Actions** page that scans `.github/workflows` and re-runs ticked jobs without a new commit. The commit history (log, Cherry-pick, Revert, Reset, Tags) moved to a *Commit history* button in this tab.
-- **Confirmation window** before every button that runs an action (stage, commit, commit & push, fetch, pull, push, switch branch, stash apply / pop, reset, push / delete tag, resolve conflict, init, save identity, GitHub login, install update, and so on).
-- **Settings** (gear icon in the top bar):
+- **Confirmation window** before every button that runs an action (stage, commit, commit & push, fetch, pull, push, switch branch, stash apply / pop, reset, push / delete tag, resolve conflict, init, save identity, GitHub login, and so on).
+- **Settings** (gear icon in the top bar), shown as a grid of tiles (3 per row, icon and label only):
   - **GitHub Settings**: storage permission, Git identity, accounts and authentication (Personal Access Token and OAuth Device Flow; tokens are stored encrypted).
   - **App Settings**: theme mode (Follow System / Light / Dark) and language (Follow System / English / Indonesian; a system language other than Indonesian uses English).
   - **Activity Log**: record of the operations that were run, with Copy and Clear.
   - **Guide**: what Git is, the Git commands and their buttons, how the app works, resolving conflicts and troubleshooting.
-  - **Check for Updates**: reads the releases of `Fueeru26/FuruGit`, shows the notes, downloads the APK and opens the system installer.
+  - **Check for Updates**: same mechanism as FuruArc. The app checks the releases of `Fueeru26/FuruGit` silently when it opens (at most every 6 hours); when a newer version exists, an update window appears right away (once per version) with the release notes and a **Download latest version** button. The APK downloads in its own window (progress bar, *Cancel download*, *Close*; progress also in the notification when notifications are enabled), then **Install app** opens the system installer. A red dot on the gear icon and on the *Check for Updates* tile shows that a new version is available. Tapping the tile opens the same window with the result of a fresh check.
   - **About**: developer, contact, donation, problem report by email and "About the App".
 - **Design** identical to FuruArc's Blue Blossom look: blossom background image, glass cards with a light rim, blue glow and corner flowers, gradient buttons and icon badges, field-style inputs and dropdowns, the floating glass navigation bar, section titles with lines, the Qanelas font, and FuruArc's animations (springy press, staggered card entrance, scroll jelly, sliding tab / rising page / sinking back transitions). There is no theme color option; only theme mode and language.
 - Status markers ("● Active", the active branch and remote) are capitalised and coloured: white / black while loading, green when connected, red when the connection fails (the active repo then reads "● Failed").
@@ -41,6 +41,7 @@ All notable changes to FuruGit are listed here. The version number is only raise
 - The toolbar title now changes immediately when switching between tabs (it used to show the previously selected tab).
 
 ### Added (more)
+- **Actions tab**: **Auto-extract Artifacts** (each downloaded artifact `.zip` is extracted into a folder named after the artifact) and **Install APK** straight from a downloaded artifact (extracted folder or the original `.zip`; if there are several APKs you pick one).
 - **Last message** button in the Changes tab: fills the commit message (and description) from the latest commit.
 - Tapping the **active repository** card in the Repo tab opens the Changes tab.
 

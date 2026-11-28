@@ -36,7 +36,8 @@ import android.widget.TextView
 import com.furugit.app.R
 import com.furugit.app.data.ActivityLog
 import com.furugit.app.data.Prefs
-import com.furugit.app.data.UpdateInfo
+import com.furugit.app.data.UpdateChecker
+import android.view.View
 import com.furugit.app.data.Updater
 
 /** Link berwarna aksen dan bergaris bawah; hanya teksnya yang bisa diketuk. */
@@ -64,24 +65,43 @@ fun Context.openLink(url: String) {
 // ───────────────────────── Menu utama Pengaturan ─────────────────────────
 
 class SettingsHomeFragment : BaseFragment() {
+    private var updateTile: MenuTile? = null
+
+    /** Titik merah pada kotak Periksa Pembaruan mengikuti ada / tidaknya versi baru. */
+    private val upListener: () -> Unit = {
+        updateTile?.dot?.visibility = if (UpdateChecker.available) View.VISIBLE else View.GONE
+    }
+
+    override fun onStart() {
+        super.onStart()
+        UpdateChecker.addListener(upListener)
+        upListener()
+    }
+
+    override fun onStop() {
+        UpdateChecker.removeListener(upListener)
+        super.onStop()
+    }
+
     override fun refresh() {
         content.removeAllViews()
         val act = requireActivity() as MainActivity
-        fun row(icon: Int, id: String, en: String, subId: String, subEn: String, f: () -> androidx.fragment.app.Fragment) {
-            content.rowCard(icon, tr(id, en), tr(subId, subEn), onClick = { act.push(f(), id) })
+        val upd = MenuTile(R.drawable.ic_download, tr("Periksa Pembaruan", "Check for Updates")) {
+            UpdateChecker.check(act)
+            UpdateDialogs.showCheck(act)
         }
-        row(R.drawable.ic_shield, "Pengaturan Github", "GitHub Settings",
-            "Izin penyimpanan, identitas Git, akun dan autentikasi", "Storage permission, Git identity, accounts and authentication") { GithubSettingsFragment() }
-        row(R.drawable.ic_tune, "Pengaturan Aplikasi", "App Settings",
-            "Mode tema dan bahasa", "Theme mode and language") { AppSettingsFragment() }
-        row(R.drawable.ic_log, "Log Aktivitas", "Activity Log",
-            "Catatan operasi Git yang dijalankan", "Record of the Git operations that were run") { LogFragment() }
-        row(R.drawable.ic_guide, "Panduan", "Guide",
-            "Apa itu Git, daftar perintah, dan cara kerja aplikasi", "What Git is, its commands, and how the app works") { GuideFragment() }
-        row(R.drawable.ic_download, "Periksa Pembaruan", "Check for Updates",
-            "Cari versi baru di GitHub Releases", "Look for a new version on GitHub Releases") { UpdateFragment() }
-        row(R.drawable.ic_info, "Tentang", "About",
-            "Pengembang, kontak, donasi, dan tentang aplikasi", "Developer, contact, donation, and about the app") { AboutFragment() }
+        updateTile = upd
+        content.tileGrid(
+            listOf(
+                MenuTile(R.drawable.ic_shield, tr("Pengaturan Github", "GitHub Settings")) { act.push(GithubSettingsFragment(), "Pengaturan Github") },
+                MenuTile(R.drawable.ic_tune, tr("Pengaturan Aplikasi", "App Settings")) { act.push(AppSettingsFragment(), "Pengaturan Aplikasi") },
+                MenuTile(R.drawable.ic_log, tr("Log Aktivitas", "Activity Log")) { act.push(LogFragment(), "Log Aktivitas") },
+                MenuTile(R.drawable.ic_guide, tr("Panduan", "Guide")) { act.push(GuideFragment(), "Panduan") },
+                upd,
+                MenuTile(R.drawable.ic_info, tr("Tentang", "About")) { act.push(AboutFragment(), "Tentang") }
+            )
+        )
+        upListener()
     }
 }
 
@@ -360,129 +380,6 @@ object GuideText {
         "Resolving conflicts" to "Conflicts appear on Merge or Pull. Open the Changes tab, Conflicts section, then choose per file: Mine (local version), Theirs (remote version), or Edit to edit the content and remove the <<<<<<<, =======, >>>>>>> markers. When every file is resolved, press Commit to finish the merge. Abort merge returns everything to the last commit.",
         "Troubleshooting" to "• \"Git name & email are not set\": fill in Git Identity in GitHub Settings.\n• \"Authentication failed\": check the token; a fine-grained PAT needs Contents (Read and write) and Metadata (Read) for that repo.\n• \"Push rejected\" or the remote has new commits: Pull first, then Push.\n• Cannot open a repo folder: make sure All files access is granted.\n• \"Repository is locked\": a leftover .git/index.lock file; delete it if no other Git operation is running.\n• Reset HARD and Discard changes cannot be undone; double-check first."
     )
-}
-
-// ───────────────────────── Periksa Pembaruan ─────────────────────────
-
-class UpdateFragment : BaseFragment() {
-    private var checked = false
-    private var info: UpdateInfo? = null
-    private var error: String? = null
-    private var progressText: String? = null
-    private var apk: File? = null
-    private var working = false
-
-    override fun refresh() {
-        content.removeAllViews()
-        val cur = Updater.current(ctx)
-        content.card {
-            label(tr("Versi terpasang", "Installed version"), 12f, dim = true)
-            label("FuruGit $cur", 20f, bold = true)
-            label(tr("Sumber: GitHub Releases Fueeru26/FuruGit", "Source: GitHub Releases of Fueeru26/FuruGit"), 12f, dim = true)
-        }
-        content.space(4)
-        val b = content.button(tr("Periksa pembaruan", "Check for updates")) { check() }
-        b.isEnabled = !working
-
-        if (error != null) content.card { label(tx(error!!), 14f) }
-        val i = info
-        if (checked && error == null) {
-            if (i == null) {
-                content.card { label(tr("Belum ada rilis di GitHub.", "There are no releases on GitHub yet."), 14f) }
-            } else if (Updater.compare(i.version, cur) <= 0) {
-                content.card { label(tr("Kamu sudah memakai versi terbaru.", "You are on the latest version."), 14f, bold = true) }
-            } else {
-                content.card {
-                    label(tr("Versi baru tersedia", "New version available"), 12f, dim = true)
-                    label("FuruGit ${i.version}", 20f, bold = true)
-                    if (i.notes.isNotBlank()) {
-                        space(6)
-                        label(i.notes.trim().take(1500), 13f, dim = true)
-                    }
-                    if (i.apkUrl == null) {
-                        space(6)
-                        hint(tr("Rilis ini belum punya file APK. Buka halaman rilis untuk detailnya.", "This release has no APK file yet. Open the release page for details."))
-                        linkText(tr("Buka halaman rilis", "Open release page")) { ctx.openLink(i.pageUrl) }
-                    }
-                }
-                if (i.apkUrl != null) {
-                    val f = apk
-                    if (f != null && f.exists()) {
-                        content.button(tr("Pasang pembaruan", "Install update")) {
-                            sure("Pasang pembaruan?", "Installer sistem akan terbuka dan meminta persetujuanmu.", "Pasang") { Updater.install(ctx, f) }
-                        }
-                    } else {
-                        val d = content.button(tr("Unduh pembaruan", "Download update")) {
-                            sure("Unduh pembaruan?", "File APK akan diunduh dari GitHub (${i.apkSize / 1024 / 1024} MB).", "Unduh") { download(i) }
-                        }
-                        d.isEnabled = !working
-                    }
-                    if (progressText != null) content.hint(progressText!!)
-                }
-            }
-        }
-    }
-
-    private fun check() {
-        val act = requireActivity() as MainActivity
-        working = true
-        error = null
-        apk = null
-        progressText = null
-        refresh()
-        act.lifecycleScope.launch {
-            act.setBusy(true)
-            try {
-                info = Updater.latest()
-                checked = true
-                ActivityLog.add("Periksa pembaruan: " + (info?.tag ?: "-"))
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Throwable) {
-                error = e.friendly()
-                ActivityLog.add("✘ Periksa pembaruan: " + e.friendly())
-            } finally {
-                working = false
-                act.setBusy(false)
-                if (isAdded && view != null) refresh()
-            }
-        }
-    }
-
-    private fun download(i: UpdateInfo) {
-        val act = requireActivity() as MainActivity
-        working = true
-        progressText = tr("Mengunduh…", "Downloading…")
-        refresh()
-        act.lifecycleScope.launch {
-            act.setBusy(true)
-            try {
-                ActivityLog.add("▶ Unduh pembaruan ${i.tag}")
-                apk = Updater.download(act, i) { done, total ->
-                    val pct = if (total > 0) " ${done * 100 / total}%" else ""
-                    act.runOnUiThread { progressText = tr("Mengunduh…", "Downloading…") + pct; if (isAdded && view != null && working) refreshProgressOnly() }
-                }
-                progressText = tr("Unduhan selesai. Tekan Pasang pembaruan.", "Download finished. Tap Install update.")
-                ActivityLog.add("✔ Unduh pembaruan ${i.tag}")
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Throwable) {
-                progressText = null
-                error = e.friendly()
-                ActivityLog.add("✘ Unduh pembaruan: " + e.friendly())
-            } finally {
-                working = false
-                act.setBusy(false)
-                if (isAdded && view != null) refresh()
-            }
-        }
-    }
-
-    /** Memperbarui teks progres tanpa membangun ulang seluruh layar. */
-    private fun refreshProgressOnly() {
-        val last = content.getChildAt(content.childCount - 1)
-        if (last is TextView && progressText != null) last.text = progressText
-    }
 }
 
 // ───────────────────────── Tentang ─────────────────────────

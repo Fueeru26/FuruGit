@@ -52,4 +52,4 @@ Tab Perubahan > Konflik: pilih Milik saya, Milik remote, atau Edit untuk tiap fi
 ## Pembaruan
 
 **Bagaimana pembaruan bekerja?**
-Pengaturan > Periksa Pembaruan membaca rilis `Fueeru26/FuruGit`. Bila ada versi lebih baru, kamu bisa mengunduh APK dan membuka installer sistem. Android meminta izin memasang dari FuruGit pada pemasangan pertama.
+FuruGit memeriksa rilis `Fueeru26/FuruGit` saat dibuka (senyap, paling sering tiap 6 jam). Bila ada versi lebih baru, jendela pembaruan muncul berisi catatan rilis, dan titik merah menandai ikon gear serta Pengaturan > Periksa Pembaruan. Kamu bisa mengunduh APK di jendela tersendiri lalu membuka installer sistem. Android meminta izin memasang dari FuruGit pada pemasangan pertama.

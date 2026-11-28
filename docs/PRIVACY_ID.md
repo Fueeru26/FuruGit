@@ -16,8 +16,8 @@ Tidak ada yang dikirim kecuali kamu memakai salah satu fitur ini:
 | --- | --- | --- |
 | Clone, Fetch, Pull, Push | URL remote repository-mu (mis. `github.com`) | Lalu lintas protokol Git, dan token aksesmu sebagai kredensial untuk host itu. |
 | Cek token dan login OAuth | `api.github.com`, `github.com` | Token yang kamu masukkan (untuk membaca username), atau Client ID dan kode perangkat untuk OAuth Device Flow. |
-| Periksa pembaruan | `api.github.com` (GitHub Releases `Fueeru26/FuruGit`) | Permintaan web biasa, hanya saat kamu menekan "Periksa pembaruan". |
-| Unduh pembaruan | Aset rilis di `github.com` | Hanya setelah kamu mengonfirmasi unduhan. Pemasangan selalu meminta konfirmasimu di installer sistem. |
+| Periksa pembaruan | `api.github.com` (GitHub Releases `Fueeru26/FuruGit`) | Permintaan web biasa, dikirim saat aplikasi dibuka (paling sering tiap 6 jam) dan saat kamu menekan "Periksa pembaruan". Tidak ada data tentangmu yang dikirim. |
+| Unduh pembaruan | Aset rilis di `github.com` | Hanya setelah kamu menekan "Download versi terbaru". Pemasangan selalu meminta konfirmasimu di installer sistem. |
 
 Seperti permintaan web lainnya, ini memperlihatkan alamat IP-mu ke server yang dihubungi.
 

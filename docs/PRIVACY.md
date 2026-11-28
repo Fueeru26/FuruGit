@@ -16,8 +16,8 @@ Nothing is sent unless you use one of these features:
 | --- | --- | --- |
 | Clone, Fetch, Pull, Push | The remote URL of your repository (for example `github.com`) | The Git protocol traffic, and your access token as credentials for that host. |
 | Token check and OAuth login | `api.github.com`, `github.com` | The token you enter (to read your username), or the Client ID and device code for OAuth Device Flow. |
-| Check for updates | `api.github.com` (GitHub Releases of `Fueeru26/FuruGit`) | A normal web request, only when you tap "Check for updates". |
-| Update download | `github.com` release assets | Only after you confirm the download. Installing always asks for your confirmation in the system installer. |
+| Check for updates | `api.github.com` (GitHub Releases of `Fueeru26/FuruGit`) | A normal web request, made when the app opens (at most every 6 hours) and when you tap "Check for updates". Nothing about you is sent. |
+| Update download | `github.com` release assets | Only after you tap "Download latest version". Installing always asks for your confirmation in the system installer. |
 
 Like any web request, these reveal your IP address to the server you contact.
 

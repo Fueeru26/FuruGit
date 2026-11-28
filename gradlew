@@ -1,5 +1,6 @@
 #!/bin/sh
-# gradlew minimal: unduh gradle-wrapper.jar jika belum ada, dan pilih JDK 17-20 (AGP 8.2 + Gradle 8.2 mewajibkan JDK 17 ke atas; utamakan 17).
+# gradlew minimal: unduh gradle-wrapper.jar jika belum ada, dan pilih JDK 8-17 (utamakan 17 karena AGP 8.x wajib JDK 17, lalu 16..9, terakhir 8).
+# Di CI, set FURUARC_JAVA="$JAVA_HOME/bin/java" supaya JDK dari setup-java yang dipakai.
 APP_HOME=$(cd "$(dirname "$0")" && pwd -P)
 JAR="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
 
@@ -36,14 +37,14 @@ for base in "$PREFIX/opt" /opt/java /opt /data/data/com.itsaky.androidide/files/
   [ -x "$base/openjdk/bin/java" ] && CANDIDATES="$CANDIDATES $base/openjdk/bin/java"
 done
 
-# Catat "mayor|path" tiap JDK yang valid (17-20). AGP 8.2 tidak mau jalan di JDK 16 ke bawah,
-# dan Gradle 8.2 belum mendukung JDK 21+. Bisa dipaksa lewat FURUARC_JAVA=/path/ke/bin/java.
+# Catat "mayor|path" tiap JDK yang valid (8-17). Java 8u212 ARM64 sering crash (bug JIT),
+# jadi JDK 11/17 diutamakan kalau ada. Bisa dipaksa lewat FURUARC_JAVA=/path/ke/bin/java.
 FOUND=""
 for c in ${FURUARC_JAVA:-} $CANDIDATES; do
   case "$c" in /bin/java) continue;; esac
   if command -v "$c" >/dev/null 2>&1 || [ -x "$c" ]; then
     m=$(java_major "$c")
-    if [ -n "$m" ] && [ "$m" -ge 17 ] && [ "$m" -le 20 ]; then FOUND="$FOUND $m|$c"; fi
+    if [ -n "$m" ] && [ "$m" -ge 8 ] && [ "$m" -le 17 ]; then FOUND="$FOUND $m|$c"; fi
   fi
 done
 
@@ -52,7 +53,7 @@ JAVAMAJOR=""
 if [ -n "$FURUARC_JAVA" ] && [ -x "$FURUARC_JAVA" ]; then
   JAVACMD="$FURUARC_JAVA"; JAVAMAJOR=$(java_major "$FURUARC_JAVA")
 else
-  for pref in 17 18 19 20; do
+  for pref in 17 16 15 14 13 12 11 10 9 8; do
     for f in $FOUND; do
       if [ "${f%%|*}" = "$pref" ]; then JAVACMD="${f#*|}"; JAVAMAJOR="$pref"; break 2; fi
     done
@@ -60,9 +61,9 @@ else
 fi
 
 if [ -z "$JAVACMD" ]; then
-  echo "JDK 17-20 tidak ditemukan. Java yang terdeteksi:" >&2
+  echo "Java 8-17 tidak ditemukan. Java yang terdeteksi:" >&2
   java -version >&2
-  echo "Set JAVA_HOME ke JDK 17 (atau FURUARC_JAVA=/path/ke/bin/java)." >&2
+  echo "Set JAVA_HOME ke JDK 8 sampai 17." >&2
   exit 1
 fi
 # Gradle daemon & semua JVM anak memakai JDK yang sama dengan yang dipilih di sini
