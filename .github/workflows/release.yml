@@ -17,9 +17,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag, for example 1.07 (created automatically if it does not exist)'
+        description: 'Release tag, for example 1.01 (created automatically if it does not exist)'
         required: true
-        default: '1.07'
+        default: '1.01'
 
 permissions:
   contents: write
