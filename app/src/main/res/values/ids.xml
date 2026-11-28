@@ -2,7 +2,6 @@
 <resources>
     <item name="nav_repo" type="id" />
     <item name="nav_changes" type="id" />
-    <item name="nav_branches" type="id" />
-    <item name="nav_sync" type="id" />
+    <item name="nav_manage" type="id" />
     <item name="nav_actions" type="id" />
 </resources>

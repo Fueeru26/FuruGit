@@ -22,7 +22,7 @@ Tidak. Aplikasi memakai JGit, implementasi Git dalam Java, jadi tidak ada progra
 Periksa tokenmu di Pengaturan > Pengaturan Github. Personal Access Token fine-grained butuh *Contents: Read and write* dan *Metadata: Read* untuk repository itu. Repository private dan push selalu butuh akun.
 
 **"Push ditolak" atau "remote punya commit baru".**
-Ada yang push lebih dulu (atau perangkat lain). Buka tab Sync, Pull, lalu Push lagi. FuruGit tidak pernah push paksa.
+Ada yang push lebih dulu (atau perangkat lain). Buka tab Kelola › Sinkronisasi, Pull, lalu Push lagi. FuruGit tidak pernah push paksa.
 
 **Login GitHub (OAuth) tidak mulai.**
 Isi Client ID GitHub App / OAuth App milikmu dengan **Device Flow** aktif. Jangan pernah memasukkan client secret.
@@ -33,7 +33,7 @@ Isi Pengaturan > Pengaturan Github > Identitas Git.
 ## File dan repository
 
 **Semua file terlihat berubah.**
-FuruGit mematikan `core.filemode` dan `core.symlinks` saat membuka repository, karena penyimpanan bersama tidak mendukung izin file Linux. Jika repository dibuka oleh alat lain, tutup dan buka lagi di tab Repo FuruGit. Perbedaan akhir baris (CRLF / LF) juga bisa membuat file terlihat berubah.
+FuruGit mematikan `core.filemode` dan `core.symlinks` saat membuka repository, karena penyimpanan bersama tidak mendukung izin file Linux. Jika repository dibuka oleh alat lain, tutup dan buka lagi di tab Repositori FuruGit. Perbedaan akhir baris (CRLF / LF) juga bisa membuat file terlihat berubah.
 
 **"Repository terkunci" (`.git/index.lock`).**
 Operasi Git sebelumnya terputus. Bila tidak ada aplikasi Git lain yang berjalan, hapus file `.git/index.lock`.

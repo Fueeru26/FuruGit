@@ -40,10 +40,9 @@ The interface is available in **Indonesian and English** (it follows the system 
 
 | Tab | What it does |
 | --- | --- |
-| **Repo** | Clone from GitHub, Init a new repository, open an existing repository folder (by real path, for example `/storage/emulated/0/FuruArc/Github/FuruArc`), choose the active repository. |
+| **Repositories** | Clone from GitHub, Init a new repository, open an existing repository folder (by real path, for example `/storage/emulated/0/FuruArc/Github/FuruArc`), choose the active repository. |
 | **Changes** | Status, Stage selected / Stage all, Unstage, Discard selected changes, coloured diff, Commit (with a **Last message** button), **Commit & Push** (stage, commit, check the remote, push), conflict resolution (Mine / Theirs / manual Edit), Abort merge. |
-| **Branch** | Local and remote branches; create, switch, merge and delete; Stash (save, apply, pop, drop, delete all). |
-| **Sync** | Fetch, Pull (merge or rebase), safe Push (always fetches first, never forces), manage remotes. |
+| **Manage** | A list of menus (title and description) that open their own page: **Branch** (local and remote branches; create, switch, merge and delete; Stash: save, apply, pop, drop, delete all) and **Synchronization** (Fetch, Pull with merge or rebase, safe Push that always fetches first and never forces, manage remotes). More menus will be added here later. |
 | **Actions** | GitHub Actions runs of the active repo (filter by branch / tag), re-run, open and delete runs (also in bulk), download artifacts and logs, view logs, install an APK from an artifact, and **Run Actions** to scan `.github/workflows` and re-run ticked jobs (e.g. debug-apk, unit-tests) without a new commit. *Commit history* (log, Cherry-pick, Revert, Reset soft / mixed / HARD, Tags, copy a hash) is a button at the bottom of this tab. |
 
 ### Manage runs
@@ -82,14 +81,14 @@ Git commands and their buttons:
 
 | Command | In FuruGit |
 | --- | --- |
-| `git init` / `git clone` | Repo > Init / Clone |
+| `git init` / `git clone` | Repositories > Init / Clone |
 | `git status` / `git diff` | Changes tab, tap a file for its diff |
 | `git add` / `git restore --staged` | Changes > Stage selected, Stage all / long press a staged file |
 | `git commit` | Changes > Commit |
 | `git add` + `commit` + `push` | Changes > Commit & Push |
-| `git branch` / `git switch` / `git merge` | Branch tab |
-| `git stash` | Branch > Stash changes |
-| `git fetch` / `pull` / `push` / `remote` | Sync tab |
+| `git branch` / `git switch` / `git merge` | Manage tab › Branch |
+| `git stash` | Manage › Branch > Stash changes |
+| `git fetch` / `pull` / `push` / `remote` | Manage tab › Synchronization |
 | `git log` / `reset` / `revert` / `cherry-pick` / `tag` | Actions tab › Commit history |
 
 **Confirmation before every action.** Buttons that execute something (stage, commit, commit & push, fetch, pull, push, switch branch, stash apply / pop, reset, push or delete a tag, resolve a conflict, init, save identity, GitHub login) open a confirmation window first.
@@ -153,9 +152,12 @@ FuruGit/
 │       ├── res/                          Themes (one per accent color), fonts (Qanelas), icons, layouts
 │       └── java/com/furugit/app/
 │           ├── App.kt                    Application: language, theme mode, JGit setup
-│           ├── data/                     Models, preferences, encrypted accounts, GitHub auth, updater
-│           ├── git/GitEngine.kt          All Git operations (JGit)
-│           └── ui/                       Screens, UI helpers, palette (Pal.kt), translations (I18n.kt)
+│           ├── MainActivity.kt           Single activity: tabs, page stack
+│           ├── core/                     Shared helpers: common (I18n, errors, log), security, storage, network
+│           ├── git/                      Git operations (JGit) split by area: repository, status, commit, branch, stash, remote, diff, history
+│           ├── github/                   GitHub: auth, actions, artifacts, workflows, releases (updater)
+│           ├── data/                     Preferences, backup, database
+│           └── ui/                       Screens per tab plus components (Pal.kt, Glass*, Dialogs, BaseFragment)
 ├── docs/                                 FAQ and Privacy (English and Indonesian), pictures
 ├── .github/                              Issue and PR templates, workflows (build, release), Dependabot, funding
 ├── README_ID.md                          README in Indonesian

@@ -1,6 +1,6 @@
 name: Release
 
-# Push a tag such as 1.01 (or 1.01-beta for a pre-release) to build a signed APK
+# Push a tag such as 1.02 (or 1.02-beta for a pre-release) to build a signed APK
 # and publish it as a GitHub release. The in-app updater downloads the first .apk
 # asset of the latest release, so this workflow attaches exactly one APK.
 #
@@ -13,13 +13,13 @@ name: Release
 on:
   push:
     tags: [ '[0-9]*' ]
-  # manual run: isi input "tag" (misalnya 1.01). Boleh dijalankan dari branch main.
+  # manual run: isi input "tag" (misalnya 1.02). Boleh dijalankan dari branch main.
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag rilis, misalnya 1.01 (dibuat otomatis jika belum ada)'
+        description: 'Tag rilis, misalnya 1.02 (dibuat otomatis jika belum ada)'
         required: true
-        default: '1.01'
+        default: '1.02'
 
 permissions:
   contents: write

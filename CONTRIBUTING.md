@@ -24,9 +24,9 @@ Toolchain: AGP 8.2.2, Gradle 8.2, Kotlin 1.9.22, JGit 5.13.3 (the last JGit line
 
 ## Code guidelines
 
-- Kotlin package: `com.furugit.app`. All Git operations live in `git/GitEngine.kt`; screens call them through the helpers in `ui/BaseFragment.kt` (`git`, `gitQuiet`, `sure`).
-- The UI is built in code with the helpers in `ui/Ui.kt` (`button`, `card`, `rowCard`, `input`, `Dialogs`). Use them so screens look consistent. Buttons in one row must stay the same height.
-- Colors come from `Context.color(R.color.furu_*)`, which resolves to the palette of the chosen accent color and theme mode (`ui/Pal.kt`). Do not hard-code colors.
+- Kotlin package: `com.furugit.app`. Follow the package layout in the "Code structure guide" of `CHANGELOG.md`. Git operations live in `git/<area>/` (for example `GitRepository.use { GitStatus.status(it) }`); screens call them through the helpers in `ui/components/BaseFragment.kt` (`git`, `gitQuiet`, `sure`).
+- The UI is built in code with the helpers in `ui/components/` (`button`, `card`, `rowCard`, `input`, `Dialogs`). Use them so screens look consistent. Buttons in one row must stay the same height.
+- Colors come from `Context.color(R.color.furu_*)`, which resolves to the palette of the chosen accent color and theme mode (`ui/components/Pal.kt`). Do not hard-code colors.
 - Every button that runs an action must ask for confirmation with `sure(title, message, okLabel)` before it executes.
 - Developer comments and commit messages are in English.
 

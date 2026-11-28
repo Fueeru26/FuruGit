@@ -40,10 +40,9 @@ Antarmuka tersedia dalam **bahasa Indonesia dan Inggris** (mengikuti bahasa sist
 
 | Tab | Fungsi |
 | --- | --- |
-| **Repo** | Clone dari GitHub, Init repository baru, buka folder repository yang sudah ada (lewat path asli, mis. `/storage/emulated/0/FuruArc/Github/FuruArc`), pilih repository aktif. |
+| **Repositori** | Clone dari GitHub, Init repository baru, buka folder repository yang sudah ada (lewat path asli, mis. `/storage/emulated/0/FuruArc/Github/FuruArc`), pilih repository aktif. |
 | **Perubahan** | Status, Stage terpilih / Stage semua, Unstage, Buang perubahan terpilih, diff berwarna, Commit (dengan tombol **Pesan terakhir**), **Commit & Push** (stage, commit, cek remote, push), penyelesaian konflik (Milik saya / Milik remote / Edit manual), Batalkan merge. |
-| **Branch** | Branch lokal dan remote; buat, pindah, merge, dan hapus; Stash (simpan, apply, pop, drop, hapus semua). |
-| **Sync** | Fetch, Pull (merge atau rebase), Push aman (selalu fetch dulu, tidak pernah memaksa), kelola remote. |
+| **Kelola** | Daftar menu (judul dan keterangan) yang masing-masing membuka halamannya sendiri: **Branch** (branch lokal dan remote; buat, pindah, merge, dan hapus; Stash: simpan, apply, pop, drop, hapus semua) dan **Sinkronisasi** (Fetch, Pull merge atau rebase, Push aman yang selalu fetch dulu dan tidak pernah memaksa, kelola remote). Menu lain akan ditambahkan di sini nanti. |
 | **Aksi** | Run GitHub Actions repo aktif (filter branch / tag), jalankan ulang, buka, hapus run (juga massal), unduh artefak dan log, lihat log, instal APK dari artefak, dan **Jalankan Aksi** untuk memindai `.github/workflows` lalu menjalankan ulang job yang dicentang (mis. debug-apk, unit-tests) tanpa commit baru. *Riwayat commit* (log, Cherry-pick, Revert, Reset soft / mixed / HARD, Tag, salin hash) ada sebagai tombol di bawah tab ini. |
 
 ### Kelola run
@@ -82,14 +81,14 @@ Perintah Git dan tombolnya:
 
 | Perintah | Di FuruGit |
 | --- | --- |
-| `git init` / `git clone` | Repo > Init / Clone |
+| `git init` / `git clone` | Repositori > Init / Clone |
 | `git status` / `git diff` | Tab Perubahan, ketuk file untuk melihat diff |
 | `git add` / `git restore --staged` | Perubahan > Stage terpilih, Stage semua / tekan lama file yang di-stage |
 | `git commit` | Perubahan > Commit |
 | `git add` + `commit` + `push` | Perubahan > Commit & Push |
-| `git branch` / `git switch` / `git merge` | Tab Branch |
-| `git stash` | Branch > Stash perubahan |
-| `git fetch` / `pull` / `push` / `remote` | Tab Sync |
+| `git branch` / `git switch` / `git merge` | Tab Kelola › Branch |
+| `git stash` | Kelola › Branch > Stash perubahan |
+| `git fetch` / `pull` / `push` / `remote` | Tab Kelola › Sinkronisasi |
 | `git log` / `reset` / `revert` / `cherry-pick` / `tag` | Tab Aksi › Riwayat commit |
 
 **Konfirmasi sebelum setiap aksi.** Tombol yang mengeksekusi sesuatu (stage, commit, commit & push, fetch, pull, push, pindah branch, apply / pop stash, reset, push atau hapus tag, selesaikan konflik, init, simpan identitas, login GitHub) membuka jendela konfirmasi lebih dulu.
@@ -153,9 +152,12 @@ FuruGit/
 │       ├── res/                          Tema (satu per warna aksen), font (Qanelas), ikon, layout
 │       └── java/com/furugit/app/
 │           ├── App.kt                    Application: bahasa, mode tema, setup JGit
-│           ├── data/                     Model, preferensi, akun terenkripsi, autentikasi GitHub, pembaruan
-│           ├── git/GitEngine.kt          Semua operasi Git (JGit)
-│           └── ui/                       Layar, helper UI, palet (Pal.kt), terjemahan (I18n.kt)
+│           ├── MainActivity.kt           Activity tunggal: tab dan tumpukan halaman
+│           ├── core/                     Bantuan bersama: common (I18n, error, log), security, storage, network
+│           ├── git/                      Operasi Git (JGit) per area: repository, status, commit, branch, stash, remote, diff, history
+│           ├── github/                   GitHub: auth, actions, artifacts, workflows, releases (updater)
+│           ├── data/                     Preferences, backup, database
+│           └── ui/                       Layar per tab plus components (Pal.kt, Glass*, Dialogs, BaseFragment)
 ├── docs/                                 FAQ dan Privasi (Inggris dan Indonesia), gambar
 ├── .github/                              Template issue dan PR, workflow (build, release), Dependabot, funding
 ├── README.md                             README dalam bahasa Inggris

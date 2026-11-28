@@ -22,7 +22,7 @@ No. It uses JGit, a Git implementation in Java, so there is no `git` binary and 
 Check your token in Settings > GitHub Settings. A fine-grained Personal Access Token needs *Contents: Read and write* and *Metadata: Read* for that repository. Private repositories and pushing always need an account.
 
 **"Push rejected" or "the remote has new commits".**
-Someone (or another device) pushed first. Open the Sync tab, Pull, then Push again. FuruGit never force-pushes.
+Someone (or another device) pushed first. Open Manage › Synchronization, Pull, then Push again. FuruGit never force-pushes.
 
 **GitHub login (OAuth) does not start.**
 Enter the Client ID of your own GitHub App / OAuth App with **Device Flow** enabled. Never enter a client secret.
@@ -33,7 +33,7 @@ Fill in Settings > GitHub Settings > Git Identity.
 ## Files and repositories
 
 **Every file shows as changed.**
-FuruGit turns off `core.filemode` and `core.symlinks` when it opens a repository, because shared storage does not support Linux file modes. If the repository was opened by another tool, close and reopen it in FuruGit's Repo tab. Line-ending differences (CRLF / LF) can also make files look changed.
+FuruGit turns off `core.filemode` and `core.symlinks` when it opens a repository, because shared storage does not support Linux file modes. If the repository was opened by another tool, close and reopen it in FuruGit's Repositories tab. Line-ending differences (CRLF / LF) can also make files look changed.
 
 **"Repository is locked" (`.git/index.lock`).**
 A previous Git operation was interrupted. If no other Git app is running, delete the `.git/index.lock` file.

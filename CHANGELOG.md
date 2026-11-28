@@ -2,6 +2,68 @@
 
 All notable changes to FuruGit are listed here. The version number is only raised when the maintainer decides to release.
 
+## Code structure guide (for maintainers and future sessions)
+
+This section is a standing note, not part of any version. Follow it when revising the code in any session.
+
+**Rule: keep to this layout.** The big files (`GitEngine.kt`, `Actions.kt`, `SettingsPages.kt`, `Glass.kt`, `Ui.kt`) were already split into it, so put new code in the matching folder, one responsibility per file, and package name = folder path. Split a file again once it grows large. `ui/manage/` (the Manage tab menu list) is an addition to the layout below, and `App.kt`, `CrashActivity.kt` and `CrashHandler.kt` stay in the root package.
+
+Target layout of `com.furugit.app`:
+
+```
+com.furugit.app/
+│
+├── core/
+│   ├── security/
+│   ├── storage/
+│   ├── network/
+│   └── common/
+│
+├── git/
+│   ├── repository/
+│   ├── status/
+│   ├── commit/
+│   ├── branch/
+│   ├── stash/
+│   ├── remote/
+│   ├── diff/
+│   └── history/
+│
+├── github/
+│   ├── auth/
+│   ├── actions/
+│   ├── artifacts/
+│   ├── workflows/
+│   └── releases/
+│
+├── data/
+│   ├── database/
+│   ├── preferences/
+│   └── backup/
+│
+├── ui/
+│   ├── repository/
+│   ├── changes/
+│   ├── branch/
+│   ├── sync/
+│   ├── history/
+│   ├── actions/
+│   ├── settings/
+│   └── components/
+│
+└── MainActivity.kt
+```
+
+Old layout (before 1.02): only `data/`, `git/` and `ui/`. `GitEngine` became one object per area (`GitRepository`, `GitStatus`, `GitCommit`, `GitDiff`, `GitBranch`, `GitMerge`, `GitStash`, `GitRemote`, `GitSync`, `GitHistory`, `GitProgress`) and `ActionsApi` was split into `ActionsApi`, `GhRest`, `ArtifactsApi` and `WorkflowScanner`.
+
+## 1.02
+
+### Changed
+- The bottom navigation now has **4 tabs** instead of 5: **Repositories** (no longer shortened to "Repo"), **Changes**, **Manage** and **Actions**.
+- The new **Manage** tab is a list of menus (title and description, same style as FuruArc's menu list). **Branch** and **Synchronization** (was "Sync") moved here and open as their own pages with a back button; their content is unchanged. More menus can be added to this list later.
+- Source files reorganized into the package layout described in the Code structure guide above (no behaviour change).
+- Guide, README and FAQ now point to *Manage › Branch* and *Manage › Synchronization*.
+
 ## 1.01
 
 ### Added
